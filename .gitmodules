@@ -1,0 +1,6 @@
+[submodule "painter"]
+	path = painter
+	url = https://github.com/chrisyeshi/Painter.git
+[submodule "volume"]
+	path = volume
+	url = https://github.com/chrisyeshi/Volume.git

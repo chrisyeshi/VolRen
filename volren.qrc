@@ -1,0 +1,12 @@
+<RCC>
+    <qresource prefix="/volren/shaders">
+        <file>cube.frag</file>
+        <file>cube.vert</file>
+        <file>imageraf.frag</file>
+        <file>imageraf.vert</file>
+        <file>quad.frag</file>
+        <file>quad.vert</file>
+        <file>raycast.frag</file>
+        <file>raycast.vert</file>
+    </qresource>
+</RCC>
