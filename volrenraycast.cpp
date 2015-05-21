@@ -6,7 +6,8 @@
 #include "imagetex.h"
 #include "volume.h"
 
-using namespace yy;
+namespace yy {
+namespace volren {
 
 VolRenRaycast::VolRenRaycast(const Method &method)
  : VolRen(method)
@@ -163,4 +164,7 @@ void VolRenRaycast::newFBO(int w, int h, std::shared_ptr<GLuint>* fbo, std::shar
         std::cout << "framebuffer incomplete" << std::endl;
     }
 }
+
+} // namespace volren
+} // namespace yy
 

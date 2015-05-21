@@ -5,6 +5,9 @@
 #include <QtOpenGL>
 #include "painter.h"
 
+namespace yy {
+namespace volren {
+
 class ImagePBO : public ImageAbstract
 {
 public:
@@ -20,5 +23,8 @@ private:
     GLuint pbo, tex;
     int w, h;
 };
+
+} // namespace volren
+} // namespace yy
 
 #endif // IMAGEPBO_H

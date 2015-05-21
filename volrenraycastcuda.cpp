@@ -26,6 +26,9 @@ static void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
 //
 //
 
+namespace yy {
+namespace volren {
+
 VolRenRaycastCuda::VolRenRaycastCuda()
  : VolRenRaycast(Method_Raycast_CUDA)
  , outPBO(0)
@@ -173,3 +176,6 @@ void VolRenRaycastCuda::tfChanged(const mslib::TF &, bool, float, Filter)
     if (tfRes) cc(cudaGraphicsUnregisterResource(tfRes));
     cc(cudaGraphicsGLRegisterImage(&tfRes, tfTex->textureId(), GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly));
 }
+
+} // namespace volren
+} // namespace yy

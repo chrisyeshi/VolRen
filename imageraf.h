@@ -8,6 +8,9 @@
 #include <QSharedPointer>
 #include "painter.h"
 
+namespace yy {
+namespace volren {
+
 class ImageRAF : public ImageAbstract
 {
     friend class ImageWriterRAF;
@@ -27,5 +30,8 @@ private:
     QSharedPointer<QOpenGLTexture> tf;
     int w, h, layers;
 };
+
+} // namespace volren
+} // namespace yy
 
 #endif // IMAGERAF_H

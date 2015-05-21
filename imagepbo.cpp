@@ -2,6 +2,9 @@
 #include <QOpenGLFunctions>
 #include <QOpenGLFunctions_3_3_Core>
 
+namespace yy {
+namespace volren {
+
 ImagePBO::ImagePBO(GLuint pbo, int w, int h)
  : ImageAbstract(TYPE_PBO)
  , initialized(false)
@@ -49,3 +52,6 @@ void ImagePBO::draw()
     f->glBindTexture(GL_TEXTURE_2D, 0);
     f->glDisable(GL_TEXTURE_2D);
 }
+
+} // namespace volren
+} // namespace yy

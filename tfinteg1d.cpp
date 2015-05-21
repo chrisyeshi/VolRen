@@ -1,6 +1,9 @@
 #include "tfinteg1d.h"
 #include <QOpenGLTexture>
 
+namespace yy {
+namespace volren {
+
 TFInteg1D::TFInteg1D()
  : resolution(0)
 {
@@ -48,4 +51,7 @@ const std::unique_ptr<float[]>& TFInteg1D::integrate(QSharedPointer<QOpenGLTextu
     tex->setData(QOpenGLTexture::RGBA, QOpenGLTexture::Float32, this->tf.get());
     return this->tf;
 }
+
+} // namespace volren
+} // namespace yy
 

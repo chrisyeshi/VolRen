@@ -5,6 +5,9 @@
 #include <QOpenGLTexture>
 #include <QOpenGLFunctions>
 
+namespace yy {
+namespace volren {
+
 TFInteg2D::TFInteg2D()
  : resolution(0)
 {
@@ -34,4 +37,7 @@ const std::unique_ptr<float[]>& TFInteg2D::integrate(QSharedPointer<QOpenGLTextu
     tex->setData(QOpenGLTexture::RGBA, QOpenGLTexture::Float32, this->tf.get());
     return this->tf;
 }
+
+} // namespace volren
+} // namespace yy
 

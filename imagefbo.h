@@ -6,6 +6,9 @@
 #include <QOpenGLFramebufferObject>
 #include "painter.h"
 
+namespace yy {
+namespace volren {
+
 class ImageFBO : public ImageAbstract
 {
 public:
@@ -20,5 +23,8 @@ private:
     yy::Painter painter;
     QSharedPointer<QOpenGLFramebufferObject> fbo;
 };
+
+} // namespace volren
+} // namespace yy
 
 #endif // IMAGEFBO_H

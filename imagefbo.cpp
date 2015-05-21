@@ -1,6 +1,7 @@
 #include "imagefbo.h"
 
-using namespace yy;
+namespace yy {
+namespace volren {
 
 ImageFBO::ImageFBO(const QSharedPointer<QOpenGLFramebufferObject> &fbo)
  : ImageAbstract(TYPE_FBO)
@@ -32,3 +33,6 @@ void ImageFBO::draw()
     glBindTexture(GL_TEXTURE_2D, 0);
     glDisable(GL_TEXTURE_2D);
 }
+
+} // namespace volren
+} // namespace yy

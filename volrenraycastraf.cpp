@@ -8,6 +8,9 @@
 #undef near
 #undef far
 
+namespace yy {
+namespace volren {
+
 //
 //
 // cuda error checking
@@ -187,3 +190,6 @@ void VolRenRaycastRAF::newOutPBO(std::shared_ptr<GLuint>* outPBO, cudaGraphicsRe
     if (*outRes) cc(cudaGraphicsUnregisterResource(*outRes));
     cc(cudaGraphicsGLRegisterBuffer(outRes, **outPBO, cudaGraphicsMapFlagsWriteDiscard));
 }
+
+} // namespace volren
+} // namespace yy

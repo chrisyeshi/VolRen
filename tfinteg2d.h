@@ -3,6 +3,9 @@
 
 #include "tfintegrater.h"
 
+namespace yy {
+namespace volren {
+
 void kernel();
 
 class TFInteg2D : public TFIntegrater
@@ -21,5 +24,8 @@ public:
 private:
     int resolution;
 };
+
+} // namespace volren
+} // namespace yy
 
 #endif // TFINTEG2D_H

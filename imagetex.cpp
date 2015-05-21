@@ -1,5 +1,8 @@
 #include "imagetex.h"
 
+namespace yy {
+namespace volren {
+
 ImageTex::ImageTex(GLuint tex)
  : ImageAbstract(TYPE_TEXTURE)
  , initialized(false)
@@ -45,3 +48,6 @@ void ImageTex::draw()
     glBindTexture(GL_TEXTURE_2D, 0);
     glDisable(GL_TEXTURE_2D);
 }
+
+} // namespace volren
+} // namespace yy

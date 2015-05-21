@@ -4,6 +4,9 @@
 #include <QtOpenGL>
 #include <QOpenGLFunctions_3_3_Core>
 
+namespace yy {
+namespace volren {
+
 void ImageWriterRAF::write(const std::string &name) const
 {
     std::string filename = name;
@@ -36,3 +39,6 @@ void ImageWriterRAF::write(const std::string &name) const
     fout.write(reinterpret_cast<const char*>(raf.data()), nBytes);
     fout.write(reinterpret_cast<const char*>(dep.data()), nBytes);
 }
+
+} // namespace volren
+} // namespace yy

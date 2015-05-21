@@ -4,6 +4,9 @@
 #include "imagewriter.h"
 #include "imageraf.h"
 
+namespace yy {
+namespace volren {
+
 class ImageWriterRAF : public ImageWriter
 {
 public:
@@ -18,5 +21,8 @@ private:
 private:
     ImageWriterRAF(); // Not implemented yet!!!
 };
+
+} // namespace volren
+} // namespace yy
 
 #endif // IMAGEWRITERRAF_H

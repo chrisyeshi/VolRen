@@ -2,6 +2,9 @@
 #include "tfinteg1d.h"
 #include "tfinteg2d.h"
 
+namespace yy {
+namespace volren {
+
 //
 //
 //
@@ -28,3 +31,6 @@ TFIntegrater::~TFIntegrater()
 {
 
 }
+
+} // namespace volren
+} // namespace yy

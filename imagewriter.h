@@ -5,6 +5,9 @@
 #include <unordered_map>
 #include "imageabstract.h"
 
+namespace yy {
+namespace volren {
+
 class ImageWriter
 {
 public:
@@ -14,6 +17,9 @@ public:
 
     virtual void write(const std::string& filename) const = 0;
 };
+
+} // namespace volren
+} // namespace yy
 
 #endif // IMAGEWRITER
 

@@ -10,8 +10,10 @@
 #include "imageabstract.h"
 
 namespace yy {
+
 class Volume;
-}
+
+namespace volren {
 
 class VolRen
 {
@@ -26,7 +28,7 @@ public:
     Method getMethod() const { return method; }
 	virtual void initializeGL() = 0;
 	virtual void resize(int w, int h) = 0;
-    virtual void setVolume(const std::weak_ptr<yy::Volume>& volume) = 0;
+    virtual void setVolume(const std::weak_ptr<Volume>& volume) = 0;
     virtual void setTF(const mslib::TF& tf, bool preinteg, float stepsize, Filter filter) = 0;
     virtual void setScalarRange(float min, float max) { scalarMin = min; scalarMax = max; }
     virtual void render(const QMatrix4x4& v, const QMatrix4x4& p) = 0;
@@ -40,5 +42,8 @@ private:
 
     VolRen(); // Not implemented
 };
+
+} // namespace volren
+} // namespace yy
 
 #endif // VOLREN_H

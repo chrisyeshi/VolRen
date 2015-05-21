@@ -1,6 +1,9 @@
 #ifndef IMAGEABSTRACT_H
 #define IMAGEABSTRACT_H
 
+namespace yy {
+namespace volren {
+
 class ImageAbstract
 {
 public:
@@ -18,5 +21,8 @@ private:
 
 	ImageAbstract(); // Not implemented!!!
 };
+
+} // namespace volren
+} // namespace yy
 
 #endif // IMAGEABSTRACT_H

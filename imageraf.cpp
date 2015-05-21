@@ -1,7 +1,8 @@
 #include "imageraf.h"
 #include <QOpenGLFunctions_3_3_Core>
 
-using namespace yy;
+namespace yy {
+namespace volren {
 
 ImageRAF::ImageRAF(std::shared_ptr<GLuint> rafPBO, std::shared_ptr<GLuint> depPBO, int w, int h, int layers, QSharedPointer<QOpenGLTexture> tf)
  : ImageAbstract(TYPE_PBO_RAF)
@@ -67,3 +68,6 @@ void ImageRAF::draw()
     glDisable(GL_TEXTURE_3D);
     glDisable(GL_TEXTURE_1D);
 }
+
+} // namespace volren
+} // namespace yy

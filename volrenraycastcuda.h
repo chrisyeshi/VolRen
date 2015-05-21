@@ -6,6 +6,9 @@
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
 
+namespace yy {
+namespace volren {
+
 class VolRenRaycastCuda : public VolRenRaycast
 {
 public:
@@ -29,5 +32,8 @@ protected:
     cudaGraphicsResource *volRes;
     cudaGraphicsResource *tfRes;
 };
+
+} // namespace volren
+} // namespace yy
 
 #endif // VOLRENRAYCASTCUDA_H

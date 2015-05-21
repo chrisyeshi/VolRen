@@ -7,6 +7,9 @@
 #include <cuda_gl_interop.h>
 #include "TF.h"
 
+namespace yy {
+namespace volren {
+
 class VolRenRaycastRAF : public VolRenRaycast
 {
 public:
@@ -33,5 +36,8 @@ protected:
 private:
     void newOutPBO(std::shared_ptr<GLuint> *outPBO, cudaGraphicsResource **outRes, int w, int h, int l);
 };
+
+} // namespace volren
+} // namespace yy
 
 #endif // VOLRENRAYCASTRAF_H

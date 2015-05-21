@@ -4,6 +4,9 @@
 #include <QOpenGLFunctions>
 #include "imagetex.h"
 
+namespace yy {
+namespace volren {
+
 VolRenRaycastGL::VolRenRaycastGL()
  : VolRenRaycast(Method_Raycast_GL)
 {
@@ -61,3 +64,6 @@ void VolRenRaycastGL::raycast(const QMatrix4x4&, const QMatrix4x4&, const QMatri
     f.glDisable(GL_TEXTURE_2D);
     f.glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
+
+} // namespace volren
+} // namespace yy

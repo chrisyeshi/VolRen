@@ -5,6 +5,9 @@
 #include <QtOpenGL>
 #include "painter.h"
 
+namespace yy {
+namespace volren {
+
 class ImageTex : public ImageAbstract
 {
 public:
@@ -21,5 +24,8 @@ private:
     yy::Painter painter;
     GLuint tex;
 };
+
+} // namespace volren
+} // namespace yy
 
 #endif // IMAGETEX_H

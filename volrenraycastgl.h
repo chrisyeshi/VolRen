@@ -13,6 +13,9 @@
 #include "tfintegrater.h"
 #include "imageabstract.h"
 
+namespace yy {
+namespace volren {
+
 class VolRenRaycastGL : public VolRenRaycast
 {
 public:
@@ -28,5 +31,8 @@ protected:
 protected:
     std::shared_ptr<GLuint> outFBO, outTex, outRen;
 };
+
+} // namespace volren
+} // namespace yy
 
 #endif // VOLRENRAYCASTGL_H

@@ -5,6 +5,9 @@
 #include <QOpenGLTexture>
 #include <QSharedPointer>
 
+namespace yy {
+namespace volren {
+
 class TFIntegrater
 {
 public:
@@ -23,5 +26,8 @@ protected:
 
 private:
 };
+
+} // namespace volren
+} // namespace yy
 
 #endif // TFINTEGRATER_H

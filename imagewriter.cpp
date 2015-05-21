@@ -2,6 +2,9 @@
 #include "imagewriterraf.h"
 #include "imageraf.h"
 
+namespace yy {
+namespace volren {
+
 std::unique_ptr<ImageWriter> ImageWriter::create(std::shared_ptr<ImageAbstract> image)
 {
     if (ImageAbstract::TYPE_PBO_RAF == image->type())
@@ -11,3 +14,6 @@ std::unique_ptr<ImageWriter> ImageWriter::create(std::shared_ptr<ImageAbstract> 
     }
     return nullptr;
 }
+
+} // namespace volren
+} // namespace yy

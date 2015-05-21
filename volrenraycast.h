@@ -13,8 +13,10 @@
 #include "imageabstract.h"
 
 namespace yy {
+
 class Volume;
-}
+
+namespace volren {
 
 class VolRenRaycast : public VolRen
 {
@@ -24,7 +26,7 @@ public:
 
     virtual void initializeGL();
     virtual void resize(int w, int h);
-    virtual void setVolume(const std::weak_ptr<yy::Volume>& volume);
+    virtual void setVolume(const std::weak_ptr<Volume>& volume);
     virtual void setTF(const mslib::TF& tf, bool preinteg, float stepsize, VolRen::Filter filter);
     virtual void render(const QMatrix4x4& v, const QMatrix4x4& p);
     virtual std::shared_ptr<ImageAbstract> output() const = 0;
@@ -43,7 +45,7 @@ protected:
     std::shared_ptr<GLuint> entryFBO, exitFBO;
     std::shared_ptr<GLuint> entryTex, exitTex;
     std::shared_ptr<GLuint> entryRen, exitRen;
-    std::weak_ptr<yy::Volume> volume;
+    std::weak_ptr<Volume> volume;
     QSharedPointer<QOpenGLTexture> volTex;
     QSharedPointer<QOpenGLTexture> tfTex;
     Filter tfFilter;
@@ -52,10 +54,13 @@ protected:
     float stepsize;
 
 protected:
-    std::shared_ptr<yy::Volume> vol() const { return volume.lock(); }
+    std::shared_ptr<Volume> vol() const { return volume.lock(); }
 
 private:
     VolRenRaycast(); // Not implemented
 };
+
+} // namespace volren
+} // namespace yy
 
 #endif // VOLRENRAYCAST_H

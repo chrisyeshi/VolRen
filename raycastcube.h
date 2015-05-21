@@ -7,6 +7,9 @@
 #include <QMatrix4x4>
 #include "painter.h"
 
+namespace yy {
+namespace volren {
+
 class RaycastCube
 {
 public:
@@ -24,5 +27,8 @@ private:
     yy::Painter painter;
     int width, height, depth;
 };
+
+} // namespace volren
+} // namespace yy
 
 #endif // RAYCASTCUBE_H
