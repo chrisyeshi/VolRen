@@ -15,7 +15,7 @@ RaycastCube::~RaycastCube()
 
 void RaycastCube::initializeGL()
 {
-    painter.initializeGL(yy::Shape::cube(), ":/volren/shaders/cube.vert", ":/volren/shaders/cube.frag");
+    painter.initializeGL(yy::Shape::cube(), ":/volren/shaders/raycastcube.vert", ":/volren/shaders/raycastcube.frag");
 }
 
 void RaycastCube::setSize(int w, int h, int d)
@@ -32,7 +32,8 @@ void RaycastCube::render(const QMatrix4x4& vp, GLenum face)
     glCullFace(face);
     glEnable(GL_DEPTH_TEST);
 
-    painter.paint("mvp", vp * matrix());
+    painter.paint("mvp", vp * matrix(),
+                  "volDim", QVector3D(width, height, depth));
 
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
@@ -43,7 +44,8 @@ const QMatrix4x4 &RaycastCube::matrix()
 {
     static QMatrix4x4 mat;
     mat.setToIdentity();
-    mat.scale(width, height, depth);
+    mat.translate(0.5f, 0.5f, 0.5f);
+    mat.scale(width - 1, height - 1, depth - 1);
     return mat;
 }
 
