@@ -142,7 +142,7 @@ void VolRenRaycastRAF::raycast(const QMatrix4x4& m, const QMatrix4x4& v, const Q
     std::vector<float> binDivs(layers + 1);
     binDivs[0] = 0.f;
     binDivs[layers] = 1.f;
-    for (unsigned int i = 0; i < layers; ++i)
+    for (int i = 0; i < layers; ++i)
         binDivs[i] = float(i) * 1.f / float(layers);
     // cast
     rafcast(vol()->w(), vol()->h(), vol()->d(), volArr,

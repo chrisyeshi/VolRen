@@ -31,6 +31,8 @@ void main(void)
     float maxLength = length(exit - entry);
     int totalSteps = int(maxLength / stepSize);
     vec2 scalar = vec2(0.0, 0.0); // a segment of the ray, X as the scalar value at the end of the segment, and Y as the scalar value at the beginning of the segment.
+    scalar.y = texture(texVolume, entry).r;
+    scalar.y = clamp((scalar.y - scalarMin) / (scalarMax - scalarMin), 0.0, 1.0);
     vec4 acc = vec4(0.0);
     for (int step = 0; step * stepSize < maxLength; ++step)
     {

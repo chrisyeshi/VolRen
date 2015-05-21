@@ -51,9 +51,10 @@ __global__ static void castray(int volWidth, int volHeight, int volDepth,
     float3 dir = normalize(exit - entry);
     float maxLength = length(exit - entry);
     float2 scalar = make_float2(0.f, 0.f);
+    scalar.y = tex3D(volTex, entry.x * volWidth, entry.y * volHeight, entry.z * volDepth);
+    scalar.y = clamp(float((scalar.y - scalarMin) / (scalarMax - scalarMin)), 0.f, 1.f);
     float4 acc = make_float4(0.f, 0.f, 0.f, 0.f);
-    int step = 0;
-    for (; step * stepSize < maxLength; ++step)
+    for (int step = 0; step * stepSize < maxLength; ++step)
     {
         float3 spot = entry + dir * (step * stepSize);
         scalar.x = tex3D(volTex, spot.x * volWidth, spot.y * volHeight, spot.z * volDepth);
