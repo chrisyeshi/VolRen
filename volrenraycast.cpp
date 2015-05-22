@@ -37,7 +37,7 @@ void VolRenRaycast::resize(int w, int h)
 //    newFBOs(w, h);
 }
 
-void VolRenRaycast::setVolume(const std::weak_ptr<Volume> &volume)
+void VolRenRaycast::setVolume(const std::weak_ptr<IVolume> &volume)
 {
     // if same volume
     if (reinterpret_cast<void*>(this->volume.get()) == reinterpret_cast<void*>(volume.lock().get()))

@@ -9,13 +9,12 @@
 namespace yy {
 namespace volren {
 
-class VolumeGL : public Volume
+class VolumeGL : public IVolume
 {
 public:
-    VolumeGL(const std::shared_ptr<Volume>& volume) : volume(volume) {}
+    VolumeGL(const std::shared_ptr<IVolume>& volume) : volume(volume) {}
     virtual ~VolumeGL();
 
-    friend std::ostream& operator<<(std::ostream& os, const VolumeGL& volume) { os << *volume.volume; return os; }
     virtual int w() const { return volume->w(); }
     virtual int h() const { return volume->h(); }
     virtual int d() const { return volume->d(); }
@@ -32,7 +31,7 @@ public:
     virtual QSharedPointer<QOpenGLTexture> getTexture() const { return texture; }
 
 private:
-    std::shared_ptr<Volume> volume;
+    std::shared_ptr<IVolume> volume;
     QSharedPointer<QOpenGLTexture> texture;
 };
 
