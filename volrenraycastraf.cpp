@@ -3,7 +3,7 @@
 #include <cassert>
 #include <QOpenGLFunctions_3_3_Core>
 #include "imageraf.h"
-#include "volume.h"
+#include "volumegl.h"
 
 #undef near
 #undef far
@@ -180,7 +180,7 @@ void VolRenRaycastRAF::raycast(const QMatrix4x4& m, const QMatrix4x4& v, const Q
 void VolRenRaycastRAF::volumeChanged()
 {
     if (volRes) cc(cudaGraphicsUnregisterResource(volRes));
-    cc(cudaGraphicsGLRegisterImage(&volRes, volTex->textureId(), GL_TEXTURE_3D, cudaGraphicsRegisterFlagsReadOnly));
+    cc(cudaGraphicsGLRegisterImage(&volRes, volume->getTexture()->textureId(), GL_TEXTURE_3D, cudaGraphicsRegisterFlagsReadOnly));
 }
 
 void VolRenRaycastRAF::newOutPBO(std::shared_ptr<GLuint>* outPBO, cudaGraphicsResource** outRes, int w, int h, int l)

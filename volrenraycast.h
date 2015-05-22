@@ -13,10 +13,9 @@
 #include "imageabstract.h"
 
 namespace yy {
-
-class Volume;
-
 namespace volren {
+
+class VolumeGL;
 
 class VolRenRaycast : public VolRen
 {
@@ -26,7 +25,7 @@ public:
 
     virtual void initializeGL();
     virtual void resize(int w, int h);
-    virtual void setVolume(const std::weak_ptr<Volume>& volume);
+    virtual void setVolume(const std::weak_ptr<Volume> &volume);
     virtual void setTF(const mslib::TF& tf, bool preinteg, float stepsize, VolRen::Filter filter);
     virtual void render(const QMatrix4x4& v, const QMatrix4x4& p);
     virtual std::shared_ptr<ImageAbstract> output() const = 0;
@@ -39,8 +38,7 @@ protected:
 protected:
     const int defaultFBOSize = 480;
     RaycastFurstum frustum;
-    std::weak_ptr<Volume> volume;
-    QSharedPointer<QOpenGLTexture> volTex;
+    std::shared_ptr<VolumeGL> volume;
     QSharedPointer<QOpenGLTexture> tfTex;
     Filter tfFilter;
     bool preintegrate;
@@ -48,7 +46,7 @@ protected:
     float stepsize;
 
 protected:
-    std::shared_ptr<Volume> vol() const { return volume.lock(); }
+    std::shared_ptr<VolumeGL> vol() const { return volume; }
 
 private:
     VolRenRaycast(); // Not implemented

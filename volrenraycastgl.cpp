@@ -3,6 +3,7 @@
 #include <QMatrix4x4>
 #include <QOpenGLFunctions>
 #include "imagetex.h"
+#include "volumegl.h"
 
 namespace yy {
 namespace volren {
@@ -106,14 +107,14 @@ void VolRenRaycastGL::raycast(const QMatrix4x4&, const QMatrix4x4&, const QMatri
     f.glActiveTexture(GL_TEXTURE1);
     f.glBindTexture(GL_TEXTURE_2D, *frustum.exitTexture());
     f.glActiveTexture(GL_TEXTURE2);
-    f.glBindTexture(GL_TEXTURE_3D, volTex->textureId());
+    f.glBindTexture(GL_TEXTURE_3D, volume->getTexture()->textureId());
     f.glActiveTexture(GL_TEXTURE3);
     f.glBindTexture(GL_TEXTURE_2D, tfTex->textureId());
     painter.paint("texEntry", 0,
                   "texExit", 1,
                   "texVolume", 2,
                   "texTF", 3,
-                  "volSize", QVector3D(vol()->w(), vol()->h(), vol()->d()),
+                  "volSize", QVector3D(volume->w(), volume->h(), volume->d()),
                   "stepSize", stepsize,
                   "scalarMin", scalarMin,
                   "scalarMax", scalarMax);

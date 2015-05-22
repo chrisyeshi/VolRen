@@ -4,7 +4,7 @@
 #include <QMatrix4x4>
 #include <QOpenGLFunctions>
 #include "imagetex.h"
-#include "volume.h"
+#include "volumegl.h"
 
 namespace yy {
 namespace volren {
@@ -40,8 +40,9 @@ void VolRenRaycast::resize(int w, int h)
 void VolRenRaycast::setVolume(const std::weak_ptr<Volume> &volume)
 {
     // if same volume
-    if (this->volume.lock().get() == volume.lock().get())
+    if (reinterpret_cast<void*>(this->volume.get()) == reinterpret_cast<void*>(volume.lock().get()))
         return;
+    // check suppoted pixel type
     static std::map<Volume::DataType, QOpenGLTexture::PixelType> dt2pt
             = {{Volume::DT_Char, QOpenGLTexture::Int8},
                {Volume::DT_Unsigned_Char, QOpenGLTexture::UInt8},
@@ -51,18 +52,17 @@ void VolRenRaycast::setVolume(const std::weak_ptr<Volume> &volume)
         std::cout << "Unsupported pixel type..." << std::endl;
         return;
     }
-    this->volume = volume;
+    // whether it's a shared volume
+    std::shared_ptr<VolumeGL> shared = std::dynamic_pointer_cast<VolumeGL>(volume.lock());
+    if (shared)
+        this->volume = shared;
+    else
+        this->volume.reset(new VolumeGL(volume.lock()));
+    // setup 3d texture
+    if (!this->volume->getTexture())
+        this->volume->makeTexture();
     // set cube dimension
     frustum.setVolumeDimension(vol()->w() * vol()->sx(), vol()->h() * vol()->sy(), vol()->d() * vol()->sz());
-//    cube.setSize(vol()->w() * vol()->sx(), vol()->h() * vol()->sy(), vol()->d() * vol()->sz());
-    // setup 3d texture
-    volTex = QSharedPointer<QOpenGLTexture>(new QOpenGLTexture(QOpenGLTexture::Target3D));
-    volTex->setFormat(QOpenGLTexture::R32F);
-    volTex->setSize(vol()->w(), vol()->h(), vol()->d());
-    volTex->allocateStorage();
-    volTex->setData(QOpenGLTexture::Red, dt2pt[vol()->pixelType()], vol()->getData().get());
-    volTex->setMinMagFilters(QOpenGLTexture::Linear, QOpenGLTexture::Linear);
-    volTex->setWrapMode(QOpenGLTexture::ClampToEdge);
     // volume changed
     volumeChanged();
 }

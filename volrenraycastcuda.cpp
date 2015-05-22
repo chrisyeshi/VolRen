@@ -2,7 +2,7 @@
 #include "volrenraycastcuda.cuda.h"
 #include <cassert>
 #include "imagepbo.h"
-#include "volume.h"
+#include "volumegl.h"
 
 //
 //
@@ -105,7 +105,7 @@ void VolRenRaycastCuda::raycast(const QMatrix4x4&, const QMatrix4x4&, const QMat
 void VolRenRaycastCuda::volumeChanged()
 {
     if (volRes) cc(cudaGraphicsUnregisterResource(volRes));
-    cc(cudaGraphicsGLRegisterImage(&volRes, volTex->textureId(), GL_TEXTURE_3D, cudaGraphicsRegisterFlagsReadOnly));
+    cc(cudaGraphicsGLRegisterImage(&volRes, volume->getTexture()->textureId(), GL_TEXTURE_3D, cudaGraphicsRegisterFlagsReadOnly));
 }
 
 void VolRenRaycastCuda::tfChanged(const mslib::TF &, bool, float, Filter)
