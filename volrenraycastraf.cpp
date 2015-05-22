@@ -53,6 +53,18 @@ VolRenRaycastRAF::~VolRenRaycastRAF()
     if (volRes)   cc(cudaGraphicsUnregisterResource(volRes));
 }
 
+void VolRenRaycastRAF::initializeGL()
+{
+    VolRenRaycast::initializeGL();
+    newFBOs(frustum.getTextureWidth(), frustum.getTextureHeight());
+}
+
+void VolRenRaycastRAF::resize(int w, int h)
+{
+    VolRenRaycast::resize(w, h);
+    newFBOs(w, h);
+}
+
 void VolRenRaycastRAF::setTF(const mslib::TF &tf, bool preinteg, float stepsize, VolRen::Filter filter)
 {
     // transfer function texture
@@ -103,9 +115,9 @@ void VolRenRaycastRAF::newFBOs(int w, int h)
 {
     texWidth = w;
     texHeight = h;
-    VolRenRaycast::newFBOs(texWidth, texHeight);
-    cc(cudaGraphicsGLRegisterImage(&entryRes, *entryTex, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly));
-    cc(cudaGraphicsGLRegisterImage(&exitRes, *exitTex, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly));
+//    VolRenRaycast::newFBOs(texWidth, texHeight);
+    cc(cudaGraphicsGLRegisterImage(&entryRes, *frustum.entryTexture(), GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly));
+    cc(cudaGraphicsGLRegisterImage(&exitRes, *frustum.exitTexture(), GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly));
     newOutPBO(&rafPBO, &rafRes, texWidth, texHeight, layers);
     newOutPBO(&depPBO, &depRes, texWidth, texHeight, layers);
 }

@@ -15,15 +15,17 @@ public:
     VolRenRaycastCuda();
     virtual ~VolRenRaycastCuda();
 
+    virtual void initializeGL();
+    virtual void resize(int w, int h);
     virtual std::shared_ptr<ImageAbstract> output() const;
 
 protected:
-    virtual void newFBOs(int w, int h);
     virtual void raycast(const QMatrix4x4&, const QMatrix4x4&, const QMatrix4x4&);
-    virtual void newReadFBO(int w, int h, std::shared_ptr<GLuint> *fbo, std::shared_ptr<GLuint> *tex, std::shared_ptr<GLuint> *ren, cudaGraphicsResource** res) const;
-    virtual void newWriteFBO(int w, int h, GLuint *pbo, cudaGraphicsResource** res) const;
     virtual void volumeChanged();
     virtual void tfChanged(const mslib::TF&,bool,float,Filter);
+
+private:
+    void updateCUDAResources();
 
 protected:
     GLuint outPBO;

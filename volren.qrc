@@ -8,5 +8,7 @@
         <file>raycast.vert</file>
         <file>raycastcube.frag</file>
         <file>raycastcube.vert</file>
+        <file>raycastplane.frag</file>
+        <file>raycastplane.vert</file>
     </qresource>
 </RCC>

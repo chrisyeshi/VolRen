@@ -34,7 +34,7 @@ void main(void)
     scalar.y = texture(texVolume, entry).r;
     scalar.y = clamp((scalar.y - scalarMin) / (scalarMax - scalarMin), 0.0, 1.0);
     vec4 acc = vec4(0.0);
-    for (int step = 0; step * stepSize < maxLength; ++step)
+    for (int step = 1; step * stepSize < maxLength; ++step)
     {
         vec3 spot = entry + dir * (step * stepSize);
         scalar.x = texture(texVolume, spot).r;

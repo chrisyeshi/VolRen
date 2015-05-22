@@ -25,15 +25,16 @@ VolRenRaycast::~VolRenRaycast()
 
 void VolRenRaycast::initializeGL()
 {
-    cube.initializeGL();
-    painter.initializeGL(":/volren/shaders/raycast.vert", ":/volren/shaders/raycast.frag");
-    newFBOs(defaultFBOSize, defaultFBOSize);
+    frustum.initializeGL();
+//    cube.initializeGL();
+//    newFBOs(defaultFBOSize, defaultFBOSize);
     this->setTF(mslib::TF(1024, 1024), preintegrate, stepsize, tfFilter);
 }
 
 void VolRenRaycast::resize(int w, int h)
 {
-    newFBOs(w, h);
+    frustum.setResolution(w, h);
+//    newFBOs(w, h);
 }
 
 void VolRenRaycast::setVolume(const std::weak_ptr<Volume> &volume)
@@ -52,7 +53,8 @@ void VolRenRaycast::setVolume(const std::weak_ptr<Volume> &volume)
     }
     this->volume = volume;
     // set cube dimension
-    cube.setSize(vol()->w() * vol()->sx(), vol()->h() * vol()->sy(), vol()->d() * vol()->sz());
+    frustum.setVolumeDimension(vol()->w() * vol()->sx(), vol()->h() * vol()->sy(), vol()->d() * vol()->sz());
+//    cube.setSize(vol()->w() * vol()->sx(), vol()->h() * vol()->sy(), vol()->d() * vol()->sz());
     // setup 3d texture
     volTex = QSharedPointer<QOpenGLTexture>(new QOpenGLTexture(QOpenGLTexture::Target3D));
     volTex->setFormat(QOpenGLTexture::R32F);
@@ -92,77 +94,10 @@ void VolRenRaycast::setTF(const mslib::TF &tf, bool preinteg, float stepsize, Fi
 void VolRenRaycast::render(const QMatrix4x4& v, const QMatrix4x4 &p)
 {
     QOpenGLFunctions f(QOpenGLContext::currentContext());
-    // entry texture
-    f.glBindFramebuffer(GL_FRAMEBUFFER, *entryFBO);
-    f.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    cube.render(p * v, GL_BACK);
-    f.glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    // exit texture
-    f.glBindFramebuffer(GL_FRAMEBUFFER, *exitFBO);
-    f.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    cube.render(p * v, GL_FRONT);
-    f.glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    frustum.entryTexture(v, p);
+    frustum.exitTexture(v, p);
     // raycast
-    raycast(cube.matrix(), v, p);
-}
-
-void VolRenRaycast::newFBOs(int w, int h)
-{
-    newFBO(w, h, &entryFBO, &entryTex, &entryRen);
-    newFBO(w, h, &exitFBO, &exitTex, &exitRen);
-}
-
-void VolRenRaycast::newFBO(int w, int h, std::shared_ptr<GLuint>* fbo, std::shared_ptr<GLuint>* tex, std::shared_ptr<GLuint>* ren) const
-{
-    QOpenGLFunctions f(QOpenGLContext::currentContext());
-    // texture
-    tex->reset([](){
-        GLuint* texPtr = new GLuint();
-        QOpenGLContext::currentContext()->functions()->glGenTextures(1, texPtr);
-        return texPtr;
-    }(), [](GLuint* texPtr){
-        QOpenGLContext::currentContext()->functions()->glDeleteTextures(1, texPtr);
-    });
-    f.glBindTexture(GL_TEXTURE_2D, **tex);
-    f.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    f.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    f.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    f.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    f.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, w, h, 0, GL_RGB, GL_FLOAT, NULL);
-    f.glBindTexture(GL_TEXTURE_2D, 0);
-    // render buffer object
-    ren->reset([](){
-        GLuint* renPtr = new GLuint();
-        QOpenGLContext::currentContext()->functions()->glGenRenderbuffers(1, renPtr);
-        return renPtr;
-    }(), [](GLuint* renPtr){
-        QOpenGLContext::currentContext()->functions()->glDeleteRenderbuffers(1, renPtr);
-    });
-    f.glBindRenderbuffer(GL_RENDERBUFFER, **ren);
-    f.glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32, w, h);
-    f.glBindRenderbuffer(GL_RENDERBUFFER, 0);
-    // framebuffer object
-    fbo->reset([](){
-        GLuint* fboPtr = new GLuint();
-        QOpenGLContext::currentContext()->functions()->glGenFramebuffers(1, fboPtr);
-        return fboPtr;
-    }(), [](GLuint* fboPtr){
-        QOpenGLContext::currentContext()->functions()->glDeleteFramebuffers(1, fboPtr);
-    });
-    f.glBindFramebuffer(GL_FRAMEBUFFER, **fbo);
-    f.glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, **tex, 0);
-    f.glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, **ren);
-    f.glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    GLenum status;
-    status = f.glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    switch (status)
-    {
-    case GL_FRAMEBUFFER_COMPLETE:
-        break;
-    default:
-        std::cout << "framebuffer incomplete" << std::endl;
-    }
+    raycast(frustum.modelMatrix(), v, p);
 }
 
 } // namespace volren

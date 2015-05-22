@@ -47,8 +47,9 @@ const QMatrix4x4 &RaycastCube::matrix()
 {
     static QMatrix4x4 mat;
     mat.setToIdentity();
-    mat.translate(0.5f, 0.5f, 0.5f);
-    mat.scale(width - 1, height - 1, depth - 1);
+//    mat.translate(0.5f, 0.5f, 0.5f);
+//    mat.scale(width - 1, height - 1, depth - 1);
+    mat.scale(width, height, depth);
     return mat;
 }
 

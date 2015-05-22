@@ -6,8 +6,8 @@
 #include <QOpenGLTexture>
 #include <QOpenGLFramebufferObject>
 #include <memory>
+#include "raycastfurstum.h"
 #include "raycastcube.h"
-#include "painter.h"
 #include "TF.h"
 #include "tfintegrater.h"
 #include "imageabstract.h"
@@ -32,19 +32,13 @@ public:
     virtual std::shared_ptr<ImageAbstract> output() const = 0;
 
 protected:
-    virtual void newFBOs(int w, int h);
     virtual void raycast(const QMatrix4x4& m, const QMatrix4x4& v, const QMatrix4x4& p) = 0;
     virtual void volumeChanged() {}
     virtual void tfChanged(const mslib::TF &tf, bool preinteg, float stepsize, Filter filter) {}
-    void newFBO(int w, int h, std::shared_ptr<GLuint>* fbo, std::shared_ptr<GLuint>* tex, std::shared_ptr<GLuint>* ren) const;
 
 protected:
     const int defaultFBOSize = 480;
-    RaycastCube cube;
-    yy::Painter painter;
-    std::shared_ptr<GLuint> entryFBO, exitFBO;
-    std::shared_ptr<GLuint> entryTex, exitTex;
-    std::shared_ptr<GLuint> entryRen, exitRen;
+    RaycastFurstum frustum;
     std::weak_ptr<Volume> volume;
     QSharedPointer<QOpenGLTexture> volTex;
     QSharedPointer<QOpenGLTexture> tfTex;

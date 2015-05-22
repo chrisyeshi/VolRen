@@ -51,18 +51,21 @@ VolRenRaycastCuda::~VolRenRaycastCuda()
     if (0 != outPBO) f.glDeleteBuffers(1, &outPBO);
 }
 
-std::shared_ptr<ImageAbstract> VolRenRaycastCuda::output() const
+void VolRenRaycastCuda::initializeGL()
 {
-    return std::make_shared<ImagePBO>(outPBO, texWidth, texHeight);
+    VolRenRaycast::initializeGL();
+    updateCUDAResources();
 }
 
-void VolRenRaycastCuda::newFBOs(int w, int h)
+void VolRenRaycastCuda::resize(int w, int h)
 {
-    this->texWidth = w;
-    this->texHeight = h;
-    newReadFBO(w, h, &entryFBO, &entryTex, &entryRen, &entryRes);
-    newReadFBO(w, h, &exitFBO, &exitTex, &exitRen, &exitRes);
-    newWriteFBO(w, h, &outPBO, &outRes);
+    VolRenRaycast::resize(w, h);
+    updateCUDAResources();
+}
+
+std::shared_ptr<ImageAbstract> VolRenRaycastCuda::output() const
+{
+    return std::make_shared<ImagePBO>(outPBO, frustum.getTextureWidth(), frustum.getTextureHeight());
 }
 
 void VolRenRaycastCuda::raycast(const QMatrix4x4&, const QMatrix4x4&, const QMatrix4x4&)
@@ -90,79 +93,13 @@ void VolRenRaycastCuda::raycast(const QMatrix4x4&, const QMatrix4x4&, const QMat
     cudacast(vol()->w(), vol()->h(), vol()->d(), volArr,
              tfInteg->w(), tfInteg->h(), stepsize, vr2cu[tfFilter], tfArr,
              scalarMin, scalarMax,
-             texWidth, texHeight, entryArr, exitArr, outPtr);
+             frustum.getTextureWidth(), frustum.getTextureHeight(), entryArr, exitArr, outPtr);
 
     cc(cudaGraphicsUnmapResources(1, &tfRes, 0));
     cc(cudaGraphicsUnmapResources(1, &volRes, 0));
     cc(cudaGraphicsUnmapResources(1, &entryRes, 0));
     cc(cudaGraphicsUnmapResources(1, &exitRes, 0));
     cc(cudaGraphicsUnmapResources(1, &outRes, 0));
-}
-
-void VolRenRaycastCuda::newReadFBO(int w, int h, std::shared_ptr<GLuint> *fbo, std::shared_ptr<GLuint> *tex, std::shared_ptr<GLuint> *ren, cudaGraphicsResource **res) const
-{
-    QOpenGLFunctions f(QOpenGLContext::currentContext());
-    // texture
-    tex->reset([](){
-        GLuint* texPtr = new GLuint();
-        QOpenGLContext::currentContext()->functions()->glGenTextures(1, texPtr);
-        return texPtr;
-    }(), [](GLuint* texPtr){
-        QOpenGLContext::currentContext()->functions()->glDeleteTextures(1, texPtr);
-    });
-    f.glBindTexture(GL_TEXTURE_2D, **tex);
-    f.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    f.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    f.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    f.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    f.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, w, h, 0, GL_RGB, GL_FLOAT, NULL);
-    f.glBindTexture(GL_TEXTURE_2D, 0);
-    // register cuda resource
-    if (*res) cc(cudaGraphicsUnregisterResource(*res));
-    cc(cudaGraphicsGLRegisterImage(res, **tex, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly));
-    // renderbuffer
-    ren->reset([](){
-        GLuint* renPtr = new GLuint();
-        QOpenGLContext::currentContext()->functions()->glGenRenderbuffers(1, renPtr);
-        return renPtr;
-    }(), [](GLuint* renPtr){
-        QOpenGLContext::currentContext()->functions()->glDeleteRenderbuffers(1, renPtr);
-    });
-    f.glBindRenderbuffer(GL_RENDERBUFFER, **ren);
-    f.glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32, w, h);
-    f.glBindRenderbuffer(GL_RENDERBUFFER, 0);
-    // fbo
-    fbo->reset([](){
-        GLuint* fboPtr = new GLuint();
-        QOpenGLContext::currentContext()->functions()->glGenFramebuffers(1, fboPtr);
-        return fboPtr;
-    }(), [](GLuint* fboPtr){
-        QOpenGLContext::currentContext()->functions()->glDeleteFramebuffers(1, fboPtr);
-    });
-    f.glBindFramebuffer(GL_FRAMEBUFFER, **fbo);
-    f.glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, **tex, 0);
-    f.glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, **ren);
-    f.glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    // check framebuffer completeness
-    GLenum status;
-    status = f.glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    if (GL_FRAMEBUFFER_COMPLETE != status)
-        std::cout << "framebuffer incomplete" << std::endl;
-}
-
-void VolRenRaycastCuda::newWriteFBO(int w, int h, GLuint *pbo, cudaGraphicsResource** res) const
-{
-    QOpenGLFunctions f(QOpenGLContext::currentContext());
-    // clean up
-    if (0 != *pbo) f.glDeleteBuffers(1, pbo);
-    // pbo
-    f.glGenBuffers(1, pbo);
-    f.glBindBuffer(GL_PIXEL_UNPACK_BUFFER, *pbo);
-    f.glBufferData(GL_PIXEL_UNPACK_BUFFER, 3 * w * h * sizeof(float), NULL, GL_STREAM_COPY);
-    f.glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-    // register cuda resource
-    if (*res) cc(cudaGraphicsUnregisterResource(*res));
-    cc(cudaGraphicsGLRegisterBuffer(res, *pbo, cudaGraphicsMapFlagsWriteDiscard));
 }
 
 void VolRenRaycastCuda::volumeChanged()
@@ -175,6 +112,27 @@ void VolRenRaycastCuda::tfChanged(const mslib::TF &, bool, float, Filter)
 {
     if (tfRes) cc(cudaGraphicsUnregisterResource(tfRes));
     cc(cudaGraphicsGLRegisterImage(&tfRes, tfTex->textureId(), GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly));
+}
+
+void VolRenRaycastCuda::updateCUDAResources()
+{
+    QOpenGLFunctions f(QOpenGLContext::currentContext());
+    // update entry and exit resources
+    if (entryRes) cc(cudaGraphicsUnregisterResource(entryRes));
+    cc(cudaGraphicsGLRegisterImage(&entryRes, *frustum.entryTexture(), GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly));
+    if (exitRes)  cc(cudaGraphicsUnregisterResource(exitRes));
+    cc(cudaGraphicsGLRegisterImage(&exitRes,  *frustum.exitTexture(),  GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly));
+    // update output PBO and CUDA resource
+    // clean up
+    if (0 != outPBO) f.glDeleteBuffers(1, &outPBO);
+    // pbo
+    f.glGenBuffers(1, &outPBO);
+    f.glBindBuffer(GL_PIXEL_UNPACK_BUFFER, outPBO);
+    f.glBufferData(GL_PIXEL_UNPACK_BUFFER, 3 * frustum.getTextureWidth() * frustum.getTextureHeight() * sizeof(float), NULL, GL_STREAM_COPY);
+    f.glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+    // register cuda resource
+    if (outRes) cc(cudaGraphicsUnregisterResource(outRes));
+    cc(cudaGraphicsGLRegisterBuffer(&outRes, outPBO, cudaGraphicsMapFlagsWriteDiscard));
 }
 
 } // namespace volren

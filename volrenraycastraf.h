@@ -16,6 +16,8 @@ public:
     VolRenRaycastRAF();
     virtual ~VolRenRaycastRAF();
 
+    virtual void initializeGL();
+    virtual void resize(int w, int h);
     virtual void setTF(const mslib::TF &tf, bool preinteg, float stepsize, Filter filter);
     virtual std::shared_ptr<ImageAbstract> output() const;
 
