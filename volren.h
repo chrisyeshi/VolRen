@@ -15,12 +15,12 @@ class IVolume;
 
 namespace volren {
 
+enum Method { Method_Raycast_GL, Method_Raycast_CUDA, Method_Raycast_RAF, Method_Unknown };
+enum Filter { Filter_Linear, Filter_Nearest };
+
 class VolRen
 {
 public:
-    enum Method { Method_Raycast_GL, Method_Raycast_CUDA, Method_Raycast_RAF, Method_Unknown };
-    enum Filter { Filter_Linear, Filter_Nearest };
-
     static std::unique_ptr<VolRen> create(const Method& method);
     VolRen(const Method& method) : scalarMin(0.f), scalarMax(1.f), method(method) {}
     virtual ~VolRen() {}

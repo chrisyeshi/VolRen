@@ -67,6 +67,15 @@ std::shared_ptr<GLuint> RaycastFurstum::entryTexture(const QMatrix4x4 &v, const 
     f.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     pNear.paint("volDim", QVector3D(volWidth, volHeight, volDepth));
     cube.render(p * v, GL_BACK);
+
+//    std::unique_ptr<GLubyte[]> pixels(new GLubyte [texWidth * texHeight * 3]);
+//    f.glReadPixels(0, 0, texWidth, texHeight, GL_RGB, GL_UNSIGNED_BYTE, pixels.get());
+//    QImage image(pixels.get(), texWidth, texHeight, QImage::Format_RGB888);
+//    static QLabel label;
+//    label.resize(texWidth, texHeight);
+//    label.setPixmap(QPixmap::fromImage(image));
+//    label.show();
+
     f.glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     return entryTex;
@@ -92,6 +101,15 @@ std::shared_ptr<GLuint> RaycastFurstum::exitTexture(const QMatrix4x4 &v, const Q
     f.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     pFar.paint("volDim", QVector3D(volWidth, volHeight, volDepth));
     cube.render(p * v, GL_FRONT);
+
+//    std::unique_ptr<GLubyte[]> pixels(new GLubyte [texWidth * texHeight * 3]);
+//    f.glReadPixels(0, 0, texWidth, texHeight, GL_RGB, GL_UNSIGNED_BYTE, pixels.get());
+//    QImage image(pixels.get(), texWidth, texHeight, QImage::Format_RGB888);
+//    static QLabel label;
+//    label.resize(texWidth, texHeight);
+//    label.setPixmap(QPixmap::fromImage(image));
+//    label.show();
+
     f.glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     return exitTex;

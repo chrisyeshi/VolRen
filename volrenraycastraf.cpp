@@ -65,7 +65,7 @@ void VolRenRaycastRAF::resize(int w, int h)
     newFBOs(w, h);
 }
 
-void VolRenRaycastRAF::setTF(const mslib::TF &tf, bool preinteg, float stepsize, VolRen::Filter filter)
+void VolRenRaycastRAF::setTF(const mslib::TF &tf, bool preinteg, float stepsize, Filter filter)
 {
     // transfer function texture
     this->stepsize = stepsize;
