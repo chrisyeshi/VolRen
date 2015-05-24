@@ -12,8 +12,8 @@ namespace volren {
 VolRenRaycast::VolRenRaycast(const Method &method)
  : VolRen(method)
  , tfFilter(Filter_Linear)
- , preintegrate(false)
- , tfInteg(TFIntegrater::create(false))
+// , preintegrate(false)
+ , tfInteg(new TFIntegrater())
  , stepsize(0.01f)
 {
 
@@ -26,9 +26,7 @@ VolRenRaycast::~VolRenRaycast()
 void VolRenRaycast::initializeGL()
 {
     frustum.initializeGL();
-//    cube.initializeGL();
-//    newFBOs(defaultFBOSize, defaultFBOSize);
-    this->setTF(mslib::TF(1024, 1024), preintegrate, stepsize, tfFilter);
+    this->setTF(mslib::TF(1024, 1024), true, stepsize, tfFilter);
 }
 
 void VolRenRaycast::resize(int w, int h)
@@ -69,31 +67,21 @@ void VolRenRaycast::setVolume(const std::weak_ptr<IVolume> &volume)
 
 void VolRenRaycast::setTF(const mslib::TF &tf, bool preinteg, float stepsize, Filter filter)
 {
-    if (this->preintegrate != preinteg)
-    {
-        this->preintegrate = preinteg;
-        tfInteg = std::move(TFIntegrater::create(this->preintegrate));
-        tfTex = tfInteg->newTexture(tf.resolution());
-
-    } else if (tfTex.isNull() || tfTex->width() != tf.resolution())
-    {
-        tfTex = tfInteg->newTexture(tf.resolution());
-    }
+    tfInteg->convertTo(preinteg);
+    tfInteg->integrate(tf.colorMap(), tf.resolution(), stepsize);
     tfFilter = filter;
-    tfInteg->integrate(tfTex, tf.colorMap(), stepsize);
     static std::map<Filter, QOpenGLTexture::Filter> vr2qt
             = { { Filter_Linear, QOpenGLTexture::Linear }
               , { Filter_Nearest, QOpenGLTexture::Nearest } };
     assert(vr2qt.count(filter) > 0);
-    tfTex->setMinMagFilters(vr2qt[filter], vr2qt[filter]);
-    tfTex->setWrapMode(QOpenGLTexture::ClampToEdge);
+    tfInteg->getTexture()->setMinMagFilters(vr2qt[filter], vr2qt[filter]);
+    tfInteg->getTexture()->setWrapMode(QOpenGLTexture::ClampToEdge);
     this->stepsize = stepsize;
     tfChanged(tf, preinteg, stepsize, filter);
 }
 
 void VolRenRaycast::render(const QMatrix4x4& v, const QMatrix4x4 &p)
 {
-    QOpenGLFunctions f(QOpenGLContext::currentContext());
     frustum.entryTexture(v, p);
     frustum.exitTexture(v, p);
     // raycast

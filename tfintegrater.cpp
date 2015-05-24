@@ -5,31 +5,31 @@
 namespace yy {
 namespace volren {
 
-//
-//
-//
-//
-// Factory create method
-//
-//
-//
-//
-
-std::unique_ptr<TFIntegrater> TFIntegrater::create(bool preintegrate)
-{
-    if (preintegrate)
-        return std::unique_ptr<TFIntegrater>(new TFInteg2D());
-    return std::unique_ptr<TFIntegrater>(new TFInteg1D());
-}
-
 TFIntegrater::TFIntegrater()
+ : integ(new TFInteg2D())
+ , preinteg(true)
 {
 
 }
 
-TFIntegrater::~TFIntegrater()
+TFIntegrater::TFIntegrater(bool preinteg)
+ : preinteg(preinteg)
 {
+    if (!preinteg)
+        integ.reset(new TFInteg1D());
+    else
+        integ.reset(new TFInteg2D());
+}
 
+void TFIntegrater::convertTo(bool preinteg)
+{
+    if (this->preinteg == preinteg)
+        return;
+    this->preinteg = preinteg;
+    if (!this->preinteg)
+        integ.reset(new TFInteg1D());
+    else
+        integ.reset(new TFInteg2D());
 }
 
 } // namespace volren

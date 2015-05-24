@@ -2,27 +2,30 @@
 #define TFINTEG2D_H
 
 #include "tfintegrater.h"
+#include <memory>
+#include <cuda_runtime.h>
+#include <cuda_gl_interop.h>
+#include <QSharedPointer>
+#include <QOpenGLTexture>
 
 namespace yy {
 namespace volren {
 
-void kernel();
-
-class TFInteg2D : public TFIntegrater
+class TFInteg2D : public ITFIntegrater
 {
 public:
     TFInteg2D();
     virtual ~TFInteg2D();
 
-// virtual functions from TFIntegrater
 public:
-    virtual QSharedPointer<QOpenGLTexture> newTexture(int size);
-    virtual const std::unique_ptr<float[]>& integrate(QSharedPointer<QOpenGLTexture> tex, const float* colormap, float stepsize);
-    virtual int w() const { return resolution; }
-    virtual int h() const { return resolution; }
+    virtual void integrate(const float* colormap, int resolution, float stepsize);
+    virtual QSharedPointer<QOpenGLTexture> getTexture() const { return texture; }
 
 private:
-    int resolution;
+    QSharedPointer<QOpenGLTexture> texture;
+    std::vector<float> data;
+
+    void newResources(int resolution);
 };
 
 } // namespace volren

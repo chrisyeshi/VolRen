@@ -8,23 +8,30 @@
 namespace yy {
 namespace volren {
 
-class TFIntegrater
+class ITFIntegrater
 {
 public:
-    static std::unique_ptr<TFIntegrater> create(bool preintegrate);
+    virtual ~ITFIntegrater() {}
+    virtual void integrate(const float* colormap, int resolution, float stepsize) = 0;
+    virtual QSharedPointer<QOpenGLTexture> getTexture() const = 0;
+};
+
+class TFIntegrater : public ITFIntegrater
+{
+public:
     TFIntegrater();
-    virtual ~TFIntegrater();
+    TFIntegrater(bool preinteg);
+    virtual ~TFIntegrater() {}
 
-    virtual QSharedPointer<QOpenGLTexture> newTexture(int size) = 0;
-    virtual const std::unique_ptr<float[]>& integrate(QSharedPointer<QOpenGLTexture> tex, const float* colormap, float stepsize) = 0;
-    virtual const std::unique_ptr<float[]>& output() const { return tf; }
-    virtual int w() const = 0;
-    virtual int h() const = 0;
+    virtual void integrate(const float* colormap, int resolution, float stepsize) { return integ->integrate(colormap, resolution, stepsize); }
+    virtual QSharedPointer<QOpenGLTexture> getTexture() const { return integ->getTexture(); }
 
-protected:
-    std::unique_ptr<float[]> tf;
+    bool isPreinteg() const { return preinteg; }
+    void convertTo(bool preinteg);
 
 private:
+    std::shared_ptr<ITFIntegrater> integ;
+    bool preinteg;
 };
 
 } // namespace volren

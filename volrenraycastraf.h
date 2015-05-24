@@ -34,6 +34,8 @@ protected:
     cudaGraphicsResource *volRes;
     std::shared_ptr<cudaArray> tfArr;
     int texWidth, texHeight, layers;
+    bool preintegrate;
+    QSharedPointer<QOpenGLTexture> tfTex;
 
 private:
     void newOutPBO(std::shared_ptr<GLuint> *outPBO, cudaGraphicsResource **outRes, int w, int h, int l);

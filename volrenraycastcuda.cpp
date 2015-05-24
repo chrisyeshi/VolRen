@@ -91,7 +91,7 @@ void VolRenRaycastCuda::raycast(const QMatrix4x4&, const QMatrix4x4&, const QMat
     assert(vr2cu.count(tfFilter) > 0);
 
     cudacast(vol()->w(), vol()->h(), vol()->d(), volArr,
-             tfInteg->w(), tfInteg->h(), stepsize, vr2cu[tfFilter], tfArr,
+             tfInteg->getTexture()->width(), tfInteg->getTexture()->height(), stepsize, vr2cu[tfFilter], tfArr,
              scalarMin, scalarMax,
              frustum.getTextureWidth(), frustum.getTextureHeight(), entryArr, exitArr, outPtr);
 
@@ -111,7 +111,7 @@ void VolRenRaycastCuda::volumeChanged()
 void VolRenRaycastCuda::tfChanged(const mslib::TF &, bool, float, Filter)
 {
     if (tfRes) cc(cudaGraphicsUnregisterResource(tfRes));
-    cc(cudaGraphicsGLRegisterImage(&tfRes, tfTex->textureId(), GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly));
+    cc(cudaGraphicsGLRegisterImage(&tfRes, tfInteg->getTexture()->textureId(), GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly));
 }
 
 void VolRenRaycastCuda::updateCUDAResources()

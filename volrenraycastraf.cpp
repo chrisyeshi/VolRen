@@ -40,6 +40,7 @@ VolRenRaycastRAF::VolRenRaycastRAF()
  , volRes(NULL)
  , texWidth(defaultFBOSize), texHeight(defaultFBOSize)
  , layers(defaultLayers)
+ , preintegrate(true)
 {
 
 }

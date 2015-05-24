@@ -42,9 +42,9 @@ protected:
     const int defaultFBOSize = 480;
     RaycastFurstum frustum;
     std::shared_ptr<VolumeGL> volume;
-    QSharedPointer<QOpenGLTexture> tfTex;
+//    QSharedPointer<QOpenGLTexture> tfTex;
     Filter tfFilter;
-    bool preintegrate;
+//    bool preintegrate;
     std::unique_ptr<TFIntegrater> tfInteg;
     float stepsize;
 

@@ -2,25 +2,25 @@
 #define TFINTEG1D_H
 
 #include "tfintegrater.h"
+#include <QSharedPointer>
+#include <QOpenGLTexture>
 
 namespace yy {
 namespace volren {
 
-class TFInteg1D : public TFIntegrater
+class TFInteg1D : public ITFIntegrater
 {
 public:
     TFInteg1D();
     virtual ~TFInteg1D();
 
-// virtual functions from TFIntegrater
 public:
-    virtual QSharedPointer<QOpenGLTexture> newTexture(int size);
-    virtual const std::unique_ptr<float[]>& integrate(QSharedPointer<QOpenGLTexture> tex, const float* colormap, float stepsize);
-    virtual int w() const { return resolution; }
-    virtual int h() const { return 1; }
+    virtual void integrate(const float *colormap, int resolution, float stepsize);
+    virtual QSharedPointer<QOpenGLTexture> getTexture() const { return texture; }
 
 private:
-    int resolution;
+    QSharedPointer<QOpenGLTexture> texture;
+    std::vector<float> data;
 };
 
 } // namespace volren

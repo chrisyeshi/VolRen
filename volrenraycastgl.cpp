@@ -109,7 +109,7 @@ void VolRenRaycastGL::raycast(const QMatrix4x4&, const QMatrix4x4&, const QMatri
     f.glActiveTexture(GL_TEXTURE2);
     f.glBindTexture(GL_TEXTURE_3D, volume->getTexture()->textureId());
     f.glActiveTexture(GL_TEXTURE3);
-    f.glBindTexture(GL_TEXTURE_2D, tfTex->textureId());
+    f.glBindTexture(GL_TEXTURE_2D, tfInteg->getTexture()->textureId());
     painter.paint("texEntry", 0,
                   "texExit", 1,
                   "texVolume", 2,
