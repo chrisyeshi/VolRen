@@ -2,6 +2,7 @@
 #define VOLRENRAYCASTGL_H
 
 #include "volrenraycast.h"
+#include "tfintegrated.h"
 #include <QSharedPointer>
 #include <QOpenGLTexture>
 #include <QOpenGLFramebufferObject>
@@ -16,7 +17,7 @@
 namespace yy {
 namespace volren {
 
-class VolRenRaycastGL : public VolRenRaycast
+class VolRenRaycastGL : public TFIntegrated<VolRenRaycast>
 {
 public:
     VolRenRaycastGL();

@@ -30,7 +30,7 @@ namespace yy {
 namespace volren {
 
 VolRenRaycastCuda::VolRenRaycastCuda()
- : VolRenRaycast(Method_Raycast_CUDA)
+ : TFIntegrated<VolRenRaycast>(Method_Raycast_CUDA)
  , outPBO(0)
  , entryRes(NULL), exitRes(NULL), outRes(NULL)
  , texWidth(defaultFBOSize), texHeight(defaultFBOSize)
@@ -61,6 +61,13 @@ void VolRenRaycastCuda::resize(int w, int h)
 {
     VolRenRaycast::resize(w, h);
     updateCUDAResources();
+}
+
+void VolRenRaycastCuda::setTF(const mslib::TF &tf, bool preinteg, float stepsize, Filter filter)
+{
+    TFIntegrated<VolRenRaycast>::setTF(tf, preinteg, stepsize, filter);
+    if (tfRes) cc(cudaGraphicsUnregisterResource(tfRes));
+    cc(cudaGraphicsGLRegisterImage(&tfRes, tfInteg->getTexture()->textureId(), GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly));
 }
 
 std::shared_ptr<ImageAbstract> VolRenRaycastCuda::output() const
@@ -106,12 +113,6 @@ void VolRenRaycastCuda::volumeChanged()
 {
     if (volRes) cc(cudaGraphicsUnregisterResource(volRes));
     cc(cudaGraphicsGLRegisterImage(&volRes, volume->getTexture()->textureId(), GL_TEXTURE_3D, cudaGraphicsRegisterFlagsReadOnly));
-}
-
-void VolRenRaycastCuda::tfChanged(const mslib::TF &, bool, float, Filter)
-{
-    if (tfRes) cc(cudaGraphicsUnregisterResource(tfRes));
-    cc(cudaGraphicsGLRegisterImage(&tfRes, tfInteg->getTexture()->textureId(), GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly));
 }
 
 void VolRenRaycastCuda::updateCUDAResources()

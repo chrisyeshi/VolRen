@@ -12,7 +12,6 @@ namespace volren {
 VolRenRaycast::VolRenRaycast(const Method &method)
  : VolRen(method)
  , tfFilter(Filter_Linear)
-// , preintegrate(false)
  , tfInteg(new TFIntegrater())
  , stepsize(0.01f)
 {
@@ -67,17 +66,10 @@ void VolRenRaycast::setVolume(const std::weak_ptr<IVolume> &volume)
 
 void VolRenRaycast::setTF(const mslib::TF &tf, bool preinteg, float stepsize, Filter filter)
 {
-    tfInteg->convertTo(preinteg);
-    tfInteg->integrate(tf.colorMap(), tf.resolution(), stepsize);
-    tfFilter = filter;
-    static std::map<Filter, QOpenGLTexture::Filter> vr2qt
-            = { { Filter_Linear, QOpenGLTexture::Linear }
-              , { Filter_Nearest, QOpenGLTexture::Nearest } };
-    assert(vr2qt.count(filter) > 0);
-    tfInteg->getTexture()->setMinMagFilters(vr2qt[filter], vr2qt[filter]);
-    tfInteg->getTexture()->setWrapMode(QOpenGLTexture::ClampToEdge);
+    this->tfFilter = filter;
     this->stepsize = stepsize;
-    tfChanged(tf, preinteg, stepsize, filter);
+
+//    tfChanged(tf, preinteg, stepsize, filter);
 }
 
 void VolRenRaycast::render(const QMatrix4x4& v, const QMatrix4x4 &p)

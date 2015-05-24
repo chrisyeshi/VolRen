@@ -36,15 +36,13 @@ public:
 protected:
     virtual void raycast(const QMatrix4x4& m, const QMatrix4x4& v, const QMatrix4x4& p) = 0;
     virtual void volumeChanged() {}
-    virtual void tfChanged(const mslib::TF &tf, bool preinteg, float stepsize, Filter filter) {}
+//    virtual void tfChanged(const mslib::TF &tf, bool preinteg, float stepsize, Filter filter) {}
 
 protected:
     const int defaultFBOSize = 480;
     RaycastFurstum frustum;
     std::shared_ptr<VolumeGL> volume;
-//    QSharedPointer<QOpenGLTexture> tfTex;
     Filter tfFilter;
-//    bool preintegrate;
     std::unique_ptr<TFIntegrater> tfInteg;
     float stepsize;
 

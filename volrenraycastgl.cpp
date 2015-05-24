@@ -9,7 +9,7 @@ namespace yy {
 namespace volren {
 
 VolRenRaycastGL::VolRenRaycastGL()
- : VolRenRaycast(Method_Raycast_GL)
+ : TFIntegrated<VolRenRaycast>(Method_Raycast_GL)
 {
 
 }
