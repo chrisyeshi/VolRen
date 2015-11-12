@@ -113,16 +113,20 @@ __global__ static void castray(int volWidth, int volHeight, int volDepth,
     float3 exit = make_float3(tex2D(exitTex, x + 0.5f, y + 0.5f));
     float3 dir = normalize(exit - entry);
     float maxLength = length(exit - entry);
+    float4 entryObj = mat4x4_mult_vec4(mPtr, make_float4(entry, 1.f));
+    float4 entryView = mat4x4_mult_vec4(mvPtr, make_float4(entry, 1.f));
     float2 scalar = make_float2(0.f, 0.f);
+    scalar.y = tex3D(volTex, entryObj.x, entryObj.y, entryObj.z);
+    scalar.y = clamp(float((scalar.x - scalarMin) / (scalarMax - scalarMin)), 0.f, 1.f);
     float2 depth = make_float2(0.f, 0.f);
+    depth.y = (-entryView.z - near) / (far - near);
+    depth.y = clamp(depth.x, 0.f, 1.f);
     float4 acc = make_float4(0.f, 0.f, 0.f, 0.f);
-    int step = 0;
-    for (; step * stepSize < maxLength; ++step)
+    for (int step = 1; step * stepSize < maxLength; ++step)
     {
         float3 spot = entry + dir * (step * stepSize);
         float4 spotObj = mat4x4_mult_vec4(mPtr, make_float4(spot, 1.f));
         float4 spotView = mat4x4_mult_vec4(mvPtr, make_float4(spot, 1.f));
-//        depth.x = (spotView.z + 1.f) / 2.f;
         depth.x = (-spotView.z - near) / (far - near);
         depth.x = clamp(depth.x, 0.f, 1.f);
         scalar.x = tex3D(volTex, spotObj.x, spotObj.y, spotObj.z);
@@ -130,7 +134,7 @@ __global__ static void castray(int volWidth, int volHeight, int volDepth,
         // if preintegration is not enabled
         if (!preinteg)
         {
-            float4 spotColor = tex1D(tfTex, scalar.x * tfSize);
+            float4 spotColor = tex1D(tfTex, scalar2sample(scalar.x, tfSize));
             spotColor.w = 1.f - pow(1.f - spotColor.w, stepSize / baseSample);
             spotColor.x *= spotColor.w;
             spotColor.y *= spotColor.w;

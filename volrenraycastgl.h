@@ -28,9 +28,9 @@ public:
     virtual std::shared_ptr<ImageAbstract> output() const;
 
 protected:
-    virtual void raycast(const QMatrix4x4&, const QMatrix4x4&, const QMatrix4x4&);
+    virtual void raycast(const QMatrix4x4&, const QMatrix4x4& matView, const QMatrix4x4&);
 
-private:
+protected:
     void newFBOs();
     void newFBO(int w, int h, std::shared_ptr<GLuint>* fbo, std::shared_ptr<GLuint>* tex, std::shared_ptr<GLuint>* ren) const;
 

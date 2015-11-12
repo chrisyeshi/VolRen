@@ -20,44 +20,34 @@ TFInteg2D::~TFInteg2D()
 
 void TFInteg2D::integrate(const float *colormap, int resolution, float stepsize)
 {
-    if (!texture || resolution != texture->width())
+    if (!texFull || resolution != texFull->width())
         newResources(resolution);
-    tfIntegrate2D(colormap, resolution, stepsize, data.data());
-    texture->setData(QOpenGLTexture::RGBA, QOpenGLTexture::Float32, data.data());
+    tfIntegrate2D(colormap, resolution, stepsize, dataFull.data(), dataBack.data());
+    texFull->setData(QOpenGLTexture::RGBA, QOpenGLTexture::Float32, dataFull.data());
+    texBack->setData(QOpenGLTexture::RGBA, QOpenGLTexture::Float32, dataBack.data());
 }
 
 void TFInteg2D::newResources(int resolution)
 {
     QOpenGLFunctions* f = QOpenGLContext::currentContext()->functions();
-    // new texture
-    texture.reset(new QOpenGLTexture(QOpenGLTexture::Target2D));
-    texture->setFormat(QOpenGLTexture::RGBA32F);
-    texture->setMinMagFilters(QOpenGLTexture::Linear, QOpenGLTexture::Linear);
-    texture->setWrapMode(QOpenGLTexture::ClampToEdge);
-    texture->setSize(resolution, resolution);
-    texture->allocateStorage();
+    // new texture full
+    texFull.reset(new QOpenGLTexture(QOpenGLTexture::Target2D));
+    texFull->setFormat(QOpenGLTexture::RGBA32F);
+    texFull->setMinMagFilters(QOpenGLTexture::Linear, QOpenGLTexture::Linear);
+    texFull->setWrapMode(QOpenGLTexture::ClampToEdge);
+    texFull->setSize(resolution, resolution);
+    texFull->allocateStorage();
+    // new texture back
+    texBack.reset(new QOpenGLTexture(QOpenGLTexture::Target2D));
+    texBack->setFormat(QOpenGLTexture::RGBA32F);
+    texBack->setMinMagFilters(QOpenGLTexture::Linear, QOpenGLTexture::Linear);
+    texBack->setWrapMode(QOpenGLTexture::ClampToEdge);
+    texBack->setSize(resolution, resolution);
+    texBack->allocateStorage();
     // resize data
-    data.resize(resolution * resolution * 4);
+    dataFull.resize(resolution * resolution * 4);
+    dataBack.resize(resolution * resolution * 4);
 }
-
-//QSharedPointer<QOpenGLTexture> TFInteg2D::newTexture(int size)
-//{
-//    this->resolution = size;
-//    auto tex = QSharedPointer<QOpenGLTexture>(new QOpenGLTexture(QOpenGLTexture::Target2D));
-//    tex->setFormat(QOpenGLTexture::RGBA32F);
-//    tex->setSize(w(), h());
-//    tex->allocateStorage();
-//    return tex;
-//}
-
-//const std::unique_ptr<float[]>& TFInteg2D::integrate(QSharedPointer<QOpenGLTexture> tex, const float *colormap, float stepsize)
-//{
-//    assert(tex->width() == tex->height());
-//    this->tf.reset(new float [4 * w() * h()]);
-//    tfIntegrate2D(colormap, w(), stepsize, this->tf.get());
-//    tex->setData(QOpenGLTexture::RGBA, QOpenGLTexture::Float32, this->tf.get());
-//    return this->tf;
-//}
 
 } // namespace volren
 } // namespace yy

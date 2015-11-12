@@ -24,8 +24,10 @@ public:
                 = { { Filter_Linear, QOpenGLTexture::Linear }
                   , { Filter_Nearest, QOpenGLTexture::Nearest } };
         assert(vr2qt.count(filter) > 0);
-        tfInteg->getTexture()->setMinMagFilters(vr2qt[filter], vr2qt[filter]);
-        tfInteg->getTexture()->setWrapMode(QOpenGLTexture::ClampToEdge);
+        tfInteg->getTexFull()->setMinMagFilters(vr2qt[filter], vr2qt[filter]);
+        tfInteg->getTexFull()->setWrapMode(QOpenGLTexture::ClampToEdge);
+        tfInteg->getTexBack()->setMinMagFilters(vr2qt[filter], vr2qt[filter]);
+        tfInteg->getTexBack()->setWrapMode(QOpenGLTexture::ClampToEdge);
     }
 
 protected:

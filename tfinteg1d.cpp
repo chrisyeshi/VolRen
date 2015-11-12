@@ -16,13 +16,18 @@ TFInteg1D::~TFInteg1D()
 
 void TFInteg1D::integrate(const float *colormap, int resolution, float stepsize)
 {
-    if (!texture || resolution != texture->width())
+    if (!texFull || resolution != texFull->width())
     {
-        texture.reset(new QOpenGLTexture(QOpenGLTexture::Target2D));
-        texture->setFormat(QOpenGLTexture::RGBA32F);
-        texture->setWrapMode(QOpenGLTexture::ClampToEdge);
-        texture->setSize(resolution, 1);
-        texture->allocateStorage();
+        texFull.reset(new QOpenGLTexture(QOpenGLTexture::Target2D));
+        texFull->setFormat(QOpenGLTexture::RGBA32F);
+        texFull->setWrapMode(QOpenGLTexture::ClampToEdge);
+        texFull->setSize(resolution, 1);
+        texFull->allocateStorage();
+        texBack.reset(new QOpenGLTexture(QOpenGLTexture::Target2D));
+        texBack->setFormat(QOpenGLTexture::RGBA32F);
+        texBack->setWrapMode(QOpenGLTexture::ClampToEdge);
+        texBack->setSize(resolution, 1);
+        texBack->allocateStorage();
         data.resize(resolution * 4);
     }
     const float baseSample = 0.01f;
@@ -44,7 +49,8 @@ void TFInteg1D::integrate(const float *colormap, int resolution, float stepsize)
         data[4 * i + 2] = adjustB;
         data[4 * i + 3] = adjustA;
     }
-    texture->setData(QOpenGLTexture::RGBA, QOpenGLTexture::Float32, data.data());
+    texFull->setData(QOpenGLTexture::RGBA, QOpenGLTexture::Float32, data.data());
+    texBack->setData(QOpenGLTexture::RGBA, QOpenGLTexture::Float32, data.data());
 }
 
 //QSharedPointer<QOpenGLTexture> TFInteg1D::newTexture(int size)

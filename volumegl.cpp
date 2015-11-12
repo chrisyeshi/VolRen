@@ -1,7 +1,12 @@
 #include "volumegl.h"
+#include <cassert>
 
 namespace yy {
 namespace volren {
+
+std::map<Filter, QOpenGLTexture::Filter> VolumeGL::filter2qgl
+        = { { Filter_Linear, QOpenGLTexture::Linear },
+            { Filter_Nearest, QOpenGLTexture::Nearest } };
 
 VolumeGL::~VolumeGL()
 {
@@ -24,8 +29,19 @@ void VolumeGL::makeTexture()
     texture->setSize(volume->w(), volume->h(), volume->d());
     texture->allocateStorage();
     texture->setData(QOpenGLTexture::Red, dt2pt[volume->pixelType()], volume->getData().get());
-    texture->setMinMagFilters(QOpenGLTexture::Linear, QOpenGLTexture::Linear);
+    assert(filter2qgl.count(filter) > 0);
+    texture->setMinMagFilters(filter2qgl[filter], filter2qgl[filter]);
     texture->setWrapMode(QOpenGLTexture::ClampToEdge);
+}
+
+void VolumeGL::setFilter(Filter filter)
+{
+    this->filter = filter;
+    if (texture)
+    {
+        assert(filter2qgl.count(filter) > 0);
+        texture->setMinMagFilters(filter2qgl[filter], filter2qgl[filter]);
+    }
 }
 
 } // namespace volren

@@ -95,6 +95,7 @@ public:
     TF &operator = (const TF &other);       // deep copy
 
     void clear();
+    void setAlpha(unsigned int index, float alpha) { if (index < _arraySize) _alphaArray[index] = alpha; }
 
     int resolution() const               { return _resolution; }
     float *colorMap()                    { return _colorMap; }

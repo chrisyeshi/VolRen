@@ -19,11 +19,12 @@ public:
 
 public:
     virtual void integrate(const float* colormap, int resolution, float stepsize);
-    virtual QSharedPointer<QOpenGLTexture> getTexture() const { return texture; }
+    virtual QSharedPointer<QOpenGLTexture> getTexFull() const { return texFull; }
+    virtual QSharedPointer<QOpenGLTexture> getTexBack() const { return texBack; }
 
 private:
-    QSharedPointer<QOpenGLTexture> texture;
-    std::vector<float> data;
+    QSharedPointer<QOpenGLTexture> texFull, texBack;
+    std::vector<float> dataFull, dataBack;
 
     void newResources(int resolution);
 };

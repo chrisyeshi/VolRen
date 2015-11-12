@@ -8,6 +8,7 @@
 #include <memory>
 #include "TF.h"
 #include "imageabstract.h"
+#include "light.h"
 
 namespace yy {
 
@@ -31,11 +32,13 @@ public:
     virtual void setVolume(const std::weak_ptr<IVolume>& volume) = 0;
     virtual void setTF(const mslib::TF& tf, bool preinteg, float stepsize, Filter filter) = 0;
     virtual void setScalarRange(float min, float max) { scalarMin = min; scalarMax = max; }
+    virtual void setLights(const std::vector<Light>& lights) { this->lights = lights; }
     virtual void render(const QMatrix4x4& v, const QMatrix4x4& p) = 0;
     virtual std::shared_ptr<ImageAbstract> output() const = 0;
 
 protected:
     float scalarMin, scalarMax;
+    std::vector<Light> lights;
 
 private:
     Method method;
