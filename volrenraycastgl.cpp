@@ -1,5 +1,7 @@
 #include "volrenraycastgl.h"
 #include <map>
+#include <sstream>
+#include <cstdio>
 #include <QMatrix4x4>
 #include <QOpenGLFunctions>
 #include "imagetex.h"
@@ -109,15 +111,32 @@ void VolRenRaycastGL::raycast(const QMatrix4x4&, const QMatrix4x4&, const QMatri
     f.glActiveTexture(GL_TEXTURE2);
     f.glBindTexture(GL_TEXTURE_3D, volume->getTexture()->textureId());
     f.glActiveTexture(GL_TEXTURE3);
-    f.glBindTexture(GL_TEXTURE_2D, tfInteg->getTexture()->textureId());
+    f.glBindTexture(GL_TEXTURE_2D, tfInteg->getTexFull()->textureId());
+    f.glActiveTexture(GL_TEXTURE4);
+    f.glBindTexture(GL_TEXTURE_2D, tfInteg->getTexBack()->textureId());
+
+    for (unsigned int i = 0; i < lights.size(); ++i)
+    {
+        painter.setUniforms(QString("lights[%1].direction").arg(i).toStdString().data(), lights[i].direction,
+                            QString("lights[%1].ambient").arg(i).toStdString().data(), lights[i].ambient * lights[i].color,
+                            QString("lights[%1].diffuse").arg(i).toStdString().data(), lights[i].diffuse * lights[i].color,
+                            QString("lights[%1].specular").arg(i).toStdString().data(), lights[i].specular * lights[i].color,
+                            QString("lights[%1].power").arg(i).toStdString().data(), lights[i].power);
+    }
+
     painter.paint("texEntry", 0,
                   "texExit", 1,
                   "texVolume", 2,
-                  "texTF", 3,
+                  "texTFFull", 3,
+                  "texTFBack", 4,
                   "volSize", QVector3D(volume->w(), volume->h(), volume->d()),
                   "stepSize", stepsize,
                   "scalarMin", scalarMin,
-                  "scalarMax", scalarMax);
+                  "scalarMax", scalarMax,
+                  "nLights", int(lights.size()));
+
+    f.glActiveTexture(GL_TEXTURE4);
+    f.glBindTexture(GL_TEXTURE_2D, 0);
     f.glActiveTexture(GL_TEXTURE3);
     f.glBindTexture(GL_TEXTURE_2D, 0);
     f.glActiveTexture(GL_TEXTURE2);

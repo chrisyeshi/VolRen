@@ -2,6 +2,7 @@
 #define VOLUMEGL_H
 
 #include "volume.h"
+#include "volren.h"
 #include <memory>
 #include <QSharedPointer>
 #include <QOpenGLTexture>
@@ -12,7 +13,7 @@ namespace volren {
 class VolumeGL : public IVolume
 {
 public:
-    VolumeGL(const std::shared_ptr<IVolume>& volume) : volume(volume) {}
+    VolumeGL(const std::shared_ptr<IVolume>& volume) : volume(volume), filter(Filter_Linear) {}
     virtual ~VolumeGL();
 
     virtual int w() const { return volume->w(); }
@@ -29,10 +30,15 @@ public:
     virtual void normalized() { volume->normalized(); }
     virtual void makeTexture();
     virtual QSharedPointer<QOpenGLTexture> getTexture() const { return texture; }
+    virtual void setFilter(Filter filter);
+    virtual Filter getFilter() const { return filter; }
 
 private:
     std::shared_ptr<IVolume> volume;
     QSharedPointer<QOpenGLTexture> texture;
+    Filter filter;
+
+    static std::map<Filter, QOpenGLTexture::Filter> filter2qgl;
 };
 
 } // namespace volren

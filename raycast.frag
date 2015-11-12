@@ -1,26 +1,55 @@
 #version 330
-// #extension GL_ARB_explicit_uniform_location : enable
 #extension GL_ARB_separate_shader_objects : enable
-
-// layout (location = 0) uniform sampler2D texEntry;
-// layout (location = 1) uniform sampler2D texExit;
-// layout (location = 2) uniform sampler3D texVolume;
-// layout (location = 3) uniform sampler2D texTF;
-// layout (location = 4) uniform vec3 volSize;
-// layout (location = 5) uniform float stepSize;
 
 uniform sampler2D texEntry;
 uniform sampler2D texExit;
 uniform sampler3D texVolume;
-uniform sampler2D texTF;
+uniform sampler2D texTFFull;
+uniform sampler2D texTFBack;
 uniform vec3 volSize;
 uniform float stepSize;
 uniform float scalarMin;
 uniform float scalarMax;
+uniform int nLights;
+uniform struct Light {
+    vec3 direction;
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+    float power;
+} lights[10];
 
 layout (location = 0) in vec2 vf_texLoc;
 
 layout (location = 0) out vec4 o_color;
+
+vec3 makeGradient(vec3 spot)
+{
+    vec3 gradient;
+    gradient.x = 0.5 * (texture(texVolume, spot + vec3(1.f/volSize.x, 0.f, 0.f)).r
+                      - texture(texVolume, spot - vec3(1.f/volSize.x, 0.f, 0.f)).r);
+    gradient.y = 0.5 * (texture(texVolume, spot + vec3(0.f, 1.f/volSize.y, 0.f)).r
+                      - texture(texVolume, spot - vec3(0.f, 1.f/volSize.y, 0.f)).r);
+    gradient.z = 0.5 * (texture(texVolume, spot + vec3(0.f, 0.f, 1.f/volSize.z)).r
+                      - texture(texVolume, spot - vec3(0.f, 0.f, 1.f/volSize.z)).r);
+    return gradient;
+}
+
+vec4 getLightFactor(vec3 grad)
+{
+    if (nLights == 0)
+        return vec4(1.0, 1.0, 1.0, 1.0);
+    vec3 normal = normalize(-grad);
+    vec4 acc = vec4(0.0, 0.0, 0.0, 0.0);
+    for (int i = 0; i < nLights; ++i)
+    {
+        float intensity = max(dot(normalize(lights[i].direction), normal), 0.f);
+        vec3 cf = intensity * lights[i].diffuse + lights[i].ambient;
+        float af = 1.f;
+        acc += vec4(cf, af);
+    }
+    return vec4(acc.rgb, 1.0);
+}
 
 void main(void)
 {
@@ -33,17 +62,26 @@ void main(void)
     vec2 scalar = vec2(0.0, 0.0); // a segment of the ray, X as the scalar value at the end of the segment, and Y as the scalar value at the beginning of the segment.
     scalar.y = texture(texVolume, entry).r;
     scalar.y = clamp((scalar.y - scalarMin) / (scalarMax - scalarMin), 0.0, 1.0);
+    vec3 spotPrev = entry;
+    vec3 spotCurr;
+    vec4 lfPrev = getLightFactor(makeGradient(entry));
+    vec4 lfCurr;
     vec4 acc = vec4(0.0);
     for (int step = 1; step * stepSize < maxLength; ++step)
     {
-        vec3 spot = entry + dir * (step * stepSize);
-        scalar.x = texture(texVolume, spot).r;
+        vec3 spotCurr = entry + dir * (step * stepSize);
+        scalar.x = texture(texVolume, spotCurr).r;
         scalar.x = clamp((scalar.x - scalarMin) / (scalarMax - scalarMin), 0.0, 1.0);
-        vec4 spotColor = texture(texTF, scalar);
-        acc += spotColor * (1.0 - acc.a);
+        vec4 colorFull = texture(texTFFull, scalar);
+        vec4 colorBack = texture(texTFBack, scalar);
+        vec4 colorFront = colorFull - colorBack;
+        vec4 lfCurr = getLightFactor(makeGradient(spotCurr));
+        acc += (colorBack * lfCurr + colorFront * lfPrev) * (1.0 - acc.a);
         if (acc.a > 0.999)
             break;
         scalar.y = scalar.x;
+        spotPrev = spotCurr;
+        lfPrev = lfCurr;
     }
     o_color = acc;
 }
