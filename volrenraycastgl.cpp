@@ -119,7 +119,6 @@ void VolRenRaycastGL::raycast(const QMatrix4x4&, const QMatrix4x4& matView, cons
     {
         QVector3D lightDir(matView.inverted() * QVector4D(lights[i].direction, 0.f));
         lightDir.normalize();
-//        QVector3D lightDir = lights[i].direction;
         painter.setUniforms(QString("lights[%1].direction").arg(i).toStdString().data(), lightDir,
                             QString("lights[%1].ambient").arg(i).toStdString().data(), lights[i].ambient * lights[i].color,
                             QString("lights[%1].diffuse").arg(i).toStdString().data(), lights[i].diffuse * lights[i].color,
