@@ -123,7 +123,7 @@ void VolRenRaycastGL::raycast(const QMatrix4x4&, const QMatrix4x4& matView, cons
                             QString("lights[%1].ambient").arg(i).toStdString().data(), lights[i].ambient * lights[i].color,
                             QString("lights[%1].diffuse").arg(i).toStdString().data(), lights[i].diffuse * lights[i].color,
                             QString("lights[%1].specular").arg(i).toStdString().data(), lights[i].specular * lights[i].color,
-                            QString("lights[%1].power").arg(i).toStdString().data(), lights[i].power);
+                            QString("lights[%1].shininess").arg(i).toStdString().data(), lights[i].shininess);
     }
 
     painter.paint("texEntry", 0,

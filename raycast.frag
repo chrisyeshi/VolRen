@@ -16,7 +16,7 @@ uniform struct Light {
     vec3 ambient;
     vec3 diffuse;
     vec3 specular;
-    float power;
+    float shininess;
 } lights[10];
 
 layout (location = 0) in vec2 vf_texLoc;
@@ -35,16 +35,28 @@ vec3 makeGradient(vec3 spot)
     return gradient;
 }
 
-vec4 getLightFactor(vec3 grad)
+vec4 getLightFactor(vec3 grad, vec3 view)
 {
     if (nLights == 0)
         return vec4(1.0, 1.0, 1.0, 1.0);
-    vec3 normal = normalize(-grad);
+    vec3 V = normalize(-view);
+    vec3 N = normalize(-grad);
     vec4 acc = vec4(0.0, 0.0, 0.0, 0.0);
     for (int i = 0; i < nLights; ++i)
     {
-        float intensity = max(dot(normalize(lights[i].direction), normal), 0.f);
-        vec3 cf = intensity * lights[i].diffuse + lights[i].ambient;
+        vec3 kd = lights[i].diffuse;
+        vec3 ka = lights[i].ambient;
+        vec3 ks = lights[i].specular;
+        float shininess = lights[i].shininess;
+        vec3 L = normalize(-lights[i].direction);
+        vec3 R = normalize(-reflect(L, N));
+        vec3 diffuse = kd * max(dot(L, N), 0.f);
+        vec3 specular = ks * pow(max(dot(R, V), 0.f), shininess);
+        vec3 cf = ka + diffuse + specular;
+
+//        float intensity = max(dot(normalize(L), N), 0.f);
+
+//        vec3 cf = intensity * lights[i].diffuse + lights[i].ambient;
         float af = 1.f;
         acc += vec4(cf, af);
     }
@@ -64,7 +76,7 @@ void main(void)
     scalar.y = clamp((scalar.y - scalarMin) / (scalarMax - scalarMin), 0.0, 1.0);
     vec3 spotPrev = entry;
     vec3 spotCurr;
-    vec4 lfPrev = getLightFactor(makeGradient(entry));
+    vec4 lfPrev = getLightFactor(makeGradient(entry), dir);
     vec4 lfCurr;
     vec4 acc = vec4(0.0);
     for (int step = 1; step * stepSize < maxLength; ++step)
@@ -75,7 +87,7 @@ void main(void)
         vec4 colorFull = texture(texTFFull, scalar);
         vec4 colorBack = texture(texTFBack, scalar);
         vec4 colorFront = colorFull - colorBack;
-        vec4 lfCurr = getLightFactor(makeGradient(spotCurr));
+        vec4 lfCurr = getLightFactor(makeGradient(spotCurr), dir);
         acc += (colorBack * lfCurr + colorFront * lfPrev) * (1.0 - acc.a);
         if (acc.a > 0.999)
             break;
