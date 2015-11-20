@@ -53,10 +53,6 @@ vec4 getLightFactor(vec3 grad, vec3 view)
         vec3 diffuse = kd * max(dot(L, N), 0.f);
         vec3 specular = ks * pow(max(dot(R, V), 0.f), shininess);
         vec3 cf = ka + diffuse + specular;
-
-//        float intensity = max(dot(normalize(L), N), 0.f);
-
-//        vec3 cf = intensity * lights[i].diffuse + lights[i].ambient;
         float af = 1.f;
         acc += vec4(cf, af);
     }
@@ -87,7 +83,7 @@ void main(void)
         vec4 colorFull = texture(texTFFull, scalar);
         vec4 colorBack = texture(texTFBack, scalar);
         vec4 colorFront = colorFull - colorBack;
-        vec4 lfCurr = getLightFactor(makeGradient(spotCurr), dir);
+        lfCurr = getLightFactor(makeGradient(spotCurr), dir);
         acc += (colorBack * lfCurr + colorFront * lfPrev) * (1.0 - acc.a);
         if (acc.a > 0.999)
             break;

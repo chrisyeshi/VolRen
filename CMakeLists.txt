@@ -20,7 +20,9 @@ file(GLOB SHADERS *.vert *.frag)
 file(GLOB RESOURCE_FILES *.qrc)
 
 cuda_add_library(volrencuda ${CUDA_SOURCES} ${CUDA_HEADERS})
+target_include_directories(volrencuda PUBLIC volume painter)
 target_link_libraries(volrencuda ${CUDA_LIBRARIES})
+qt5_use_modules(volrencuda Core OpenGL)
 
 qt5_add_resources(RESOURCES ${RESOURCE_FILES})
 add_library(volren ${SOURCES} ${HEADERS} ${RESOURCES} ${SHADERS})
