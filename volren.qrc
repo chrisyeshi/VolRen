@@ -10,5 +10,6 @@
         <file>raycastcube.vert</file>
         <file>raycastplane.frag</file>
         <file>raycastplane.vert</file>
+        <file>tfinteg2d.frag</file>
     </qresource>
 </RCC>
