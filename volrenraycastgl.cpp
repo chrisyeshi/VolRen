@@ -101,6 +101,9 @@ void VolRenRaycastGL::raycast(const QMatrix4x4&, const QMatrix4x4& matView, cons
 {
     QOpenGLFunctions f(QOpenGLContext::currentContext());
     f.glBindFramebuffer(GL_FRAMEBUFFER, *outFBO);
+    GLint viewport[4];
+    f.glGetIntegerv(GL_VIEWPORT, viewport);
+    f.glViewport(0, 0, frustum.getTextureWidth(), frustum.getTextureHeight());
     f.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     f.glEnable(GL_TEXTURE_2D);
     f.glEnable(GL_TEXTURE_3D);
@@ -149,6 +152,7 @@ void VolRenRaycastGL::raycast(const QMatrix4x4&, const QMatrix4x4& matView, cons
     f.glBindTexture(GL_TEXTURE_2D, 0);
     f.glDisable(GL_TEXTURE_3D);
     f.glDisable(GL_TEXTURE_2D);
+    f.glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
     f.glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
