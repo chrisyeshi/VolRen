@@ -64,7 +64,11 @@ std::shared_ptr<GLuint> RaycastFurstum::entryTexture(const QMatrix4x4 &v, const 
 
     QOpenGLFunctions f(QOpenGLContext::currentContext());
     f.glBindFramebuffer(GL_FRAMEBUFFER, *entryFBO);
+    GLint viewport[4];
+    f.glGetIntegerv(GL_VIEWPORT, viewport);
+    f.glViewport(0, 0, texWidth, texHeight);
     f.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     pNear.paint("volDim", QVector3D(volWidth, volHeight, volDepth));
     cube.render(p * v, GL_BACK);
 
@@ -76,6 +80,7 @@ std::shared_ptr<GLuint> RaycastFurstum::entryTexture(const QMatrix4x4 &v, const 
 //    label.setPixmap(QPixmap::fromImage(image));
 //    label.show();
 
+    f.glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
     f.glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     return entryTex;
@@ -98,6 +103,9 @@ std::shared_ptr<GLuint> RaycastFurstum::exitTexture(const QMatrix4x4 &v, const Q
 
     QOpenGLFunctions f(QOpenGLContext::currentContext());
     f.glBindFramebuffer(GL_FRAMEBUFFER, *exitFBO);
+    GLint viewport[4];
+    f.glGetIntegerv(GL_VIEWPORT, viewport);
+    f.glViewport(0, 0, texWidth, texHeight);
     f.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     pFar.paint("volDim", QVector3D(volWidth, volHeight, volDepth));
     cube.render(p * v, GL_FRONT);
@@ -110,6 +118,7 @@ std::shared_ptr<GLuint> RaycastFurstum::exitTexture(const QMatrix4x4 &v, const Q
 //    label.setPixmap(QPixmap::fromImage(image));
 //    label.show();
 
+    f.glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
     f.glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     return exitTex;
