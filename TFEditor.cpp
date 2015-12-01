@@ -528,11 +528,11 @@ void TFDrawArea::mouseMoveEvent(QMouseEvent *e)
         }
     }
 
-    if (_changed)
-    {
-        _changed = false;
-        _tfEditor->emitTFChanged();
-    }
+//    if (_changed)
+//    {
+//        _changed = false;
+//        _tfEditor->emitTFChanged();
+//    }
 }
 
 void TFDrawArea::mousePressEvent(QMouseEvent *e)
