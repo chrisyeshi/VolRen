@@ -18,6 +18,7 @@ public:
 
     virtual void initialize();
     virtual void draw();
+    GLuint texture() const { return tex; }
 
 private:
     bool initialized;
