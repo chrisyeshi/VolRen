@@ -70,7 +70,6 @@ void main(void)
     vec2 scalar = vec2(0.0, 0.0); // a segment of the ray, X as the scalar value at the end of the segment, and Y as the scalar value at the beginning of the segment.
     scalar.y = texture(texVolume, entry).r;
     scalar.y = clamp((scalar.y - scalarMin) / (scalarMax - scalarMin), 0.0, 1.0);
-    vec3 spotPrev = entry;
     vec3 spotCurr;
     vec4 lfPrev = getLightFactor(makeGradient(entry), dir);
     vec4 lfCurr;
@@ -88,7 +87,6 @@ void main(void)
         if (acc.a > 0.999)
             break;
         scalar.y = scalar.x;
-        spotPrev = spotCurr;
         lfPrev = lfCurr;
     }
     o_color = acc;

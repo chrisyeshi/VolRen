@@ -7,6 +7,7 @@
 namespace yy {
 namespace volren {
 
+// TODO: put into a VolRenFactory and use a map for the creators
 std::unique_ptr<VolRen> VolRen::create(const Method &method)
 {
     assert(Method_Unknown != method);
