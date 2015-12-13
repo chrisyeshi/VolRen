@@ -88,6 +88,9 @@ public:
     void clearHistogram();
     void incrementHistogram(double value) { _histogram->increment(value); }     // need to repaint
 
+    // mouse tracking
+    void setTracking(bool isTracking) { _isTracking = isTracking; }
+
     // I/O
     void loadTF(const QString &fileName);
     void saveTF(const QString &fileName) const;
@@ -122,6 +125,7 @@ private:
     int _drawAreaRightMargin;
     int _colorMapAreaDrawAreaVerticalSpacing;
     int _drawAreaColorControlAreaVerticalSpacing;
+    bool _isTracking;
 
 protected slots:
     void open();

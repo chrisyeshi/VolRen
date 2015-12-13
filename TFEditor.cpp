@@ -131,6 +131,7 @@ TFEditor::TFEditor(QWidget *parent, int resolution, int arraySize)
     _drawAreaRightMargin = 8;
     _colorMapAreaDrawAreaVerticalSpacing = 4;
     _drawAreaColorControlAreaVerticalSpacing = 4;
+    _isTracking = true;
 
     bool enableVSlider = false;
     bool enableButtons = false;
@@ -528,11 +529,11 @@ void TFDrawArea::mouseMoveEvent(QMouseEvent *e)
         }
     }
 
-//    if (_changed)
-//    {
-//        _changed = false;
-//        _tfEditor->emitTFChanged();
-//    }
+    if (_changed && _tfEditor->_isTracking)
+    {
+        _changed = false;
+        _tfEditor->emitTFChanged();
+    }
 }
 
 void TFDrawArea::mousePressEvent(QMouseEvent *e)
@@ -965,6 +966,8 @@ void TFColorControlArea::mouseMoveEvent(QMouseEvent *e)
             _lastPos = pos;
             _lastPos.setX(clamp(_lastPos.x(), -controlWidthF, 1.0 + controlWidthF));
             _tfEditor->updateTF(false, true);
+            if (_tfEditor->_isTracking)
+                _tfEditor->emitTFChanged();
             e->accept();
         }
     }
