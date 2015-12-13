@@ -1,6 +1,6 @@
 #include "tfinteg2d.cuda.h"
 #include <iostream>
-#include "cutil_math.h"
+#include "../cutil_math.h"
 
 __global__ void tfIntegrate2D_kernel(float* tf1d, float segLen, float* tf2dfull, float* tf2dback)
 {

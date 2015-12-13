@@ -1,7 +1,5 @@
 <RCC>
     <qresource prefix="/volren/shaders">
-        <file>imageraf.frag</file>
-        <file>imageraf.vert</file>
         <file>quad.frag</file>
         <file>quad.vert</file>
         <file>raycast.frag</file>
@@ -10,6 +8,8 @@
         <file>raycastcube.vert</file>
         <file>raycastplane.frag</file>
         <file>raycastplane.vert</file>
-        <file>tfinteg2d.frag</file>
+        <file>transferfunction/tfinteg2d.frag</file>
+        <file>image/imageraf.vert</file>
+        <file>image/imageraf.frag</file>
     </qresource>
 </RCC>

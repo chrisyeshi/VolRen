@@ -23,7 +23,7 @@ ImageRAF::~ImageRAF()
 
 void ImageRAF::initialize()
 {
-    painter.initializeGL(":/volren/shaders/imageraf.vert", ":/volren/shaders/imageraf.frag");
+    painter.initializeGL(":/volren/shaders/image/imageraf.vert", ":/volren/shaders/image/imageraf.frag");
     auto f = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_3_3_Core>();
     f->initializeOpenGLFunctions();
     tex.reset([](){
