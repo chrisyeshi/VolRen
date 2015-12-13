@@ -51,6 +51,7 @@ static dim3 getDimGrid2D(int w, int h)
     return dimGrid;
 }
 
+// TODO: make boundary gradients to face outward
 __device__ static float3 makeGradient(float3 spot)
 {
     float3 gradient;

@@ -23,6 +23,7 @@ layout (location = 0) in vec2 vf_texLoc;
 
 layout (location = 0) out vec4 o_color;
 
+// TODO: make boundary gradients to face outward
 vec3 makeGradient(vec3 spot)
 {
     vec3 gradient;

@@ -7,7 +7,7 @@
 #include <QJsonObject>
 #include <memory>
 #include <TF.h>
-#include "imageabstract.h"
+#include <imageabstract.h>
 #include "light.h"
 
 // TODO: profile the performance

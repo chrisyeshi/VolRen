@@ -10,18 +10,20 @@ set(CMAKE_AUTOMOC ON)
 
 add_subdirectory(volume)
 add_subdirectory(painter)
-add_subdirectory(transferfunction)
 
-file(GLOB CUDA_SOURCES *.cuda.cu ${CUDA_SOURCES_TF})
-file(GLOB CUDA_HEADERS *.cuda.h ${CUDA_HEADERS_TF})
+file(GLOB CUDA_SOURCES *.cuda.cu)
+file(GLOB CUDA_HEADERS *.cuda.h)
 
-file(GLOB SOURCES *.cpp ${SOURCES_TF})
-file(GLOB HEADERS *.h ${HEADERS_TF})
-file(GLOB SHADERS *.vert *.frag ${SHADERS_H})
+file(GLOB SOURCES *.cpp)
+file(GLOB HEADERS *.h)
+file(GLOB SHADERS *.vert *.frag)
 file(GLOB RESOURCE_FILES *.qrc)
 
+add_subdirectory(image)
+add_subdirectory(transferfunction)
+
 cuda_add_library(volrencuda ${CUDA_SOURCES} ${CUDA_HEADERS})
-target_include_directories(volrencuda PUBLIC volume painter transferfunction)
+target_include_directories(volrencuda PUBLIC volume painter transferfunction image)
 target_link_libraries(volrencuda ${CUDA_LIBRARIES})
 qt5_use_modules(volrencuda Core OpenGL)
 
