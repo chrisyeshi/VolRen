@@ -528,11 +528,11 @@ void TFDrawArea::mouseMoveEvent(QMouseEvent *e)
         }
     }
 
-    if (_changed)
-    {
-        _changed = false;
-        _tfEditor->emitTFChanged();
-    }
+//    if (_changed)
+//    {
+//        _changed = false;
+//        _tfEditor->emitTFChanged();
+//    }
 }
 
 void TFDrawArea::mousePressEvent(QMouseEvent *e)
@@ -965,7 +965,6 @@ void TFColorControlArea::mouseMoveEvent(QMouseEvent *e)
             _lastPos = pos;
             _lastPos.setX(clamp(_lastPos.x(), -controlWidthF, 1.0 + controlWidthF));
             _tfEditor->updateTF(false, true);
-            _tfEditor->emitTFChanged();
             e->accept();
         }
     }
@@ -1019,7 +1018,10 @@ void TFColorControlArea::mousePressEvent(QMouseEvent *e)
 void TFColorControlArea::mouseReleaseEvent(QMouseEvent*)
 {
     if (_draggedControl >= 0)
+    {
         _draggedControl = -1;
+        _tfEditor->emitTFChanged();
+    }
 }
 
 void TFColorControlArea::paintEvent(QPaintEvent*)
