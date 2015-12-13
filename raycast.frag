@@ -23,7 +23,8 @@ layout (location = 0) in vec2 vf_texLoc;
 
 layout (location = 0) out vec4 o_color;
 
-// TODO: make boundary gradients to face outward
+// TODO: tricubic interpolation
+
 vec3 makeGradient(vec3 spot)
 {
     vec3 gradient;
@@ -34,6 +35,16 @@ vec3 makeGradient(vec3 spot)
     gradient.z = 0.5 * (texture(texVolume, spot + vec3(0.f, 0.f, 1.f/volSize.z)).r
                       - texture(texVolume, spot - vec3(0.f, 0.f, 1.f/volSize.z)).r);
     return gradient;
+}
+
+vec3 entryGradient(vec2 viewSpot)
+{
+    float delta = 1.0 / 80000.f;
+    vec3 left = texture(texEntry, viewSpot + vec2(-delta, 0.0)).xyz;
+    vec3 right = texture(texEntry, viewSpot + vec2(delta, 0.0)).xyz;
+    vec3 top = texture(texEntry, viewSpot + vec2(0.0, delta)).xyz;
+    vec3 bottom = texture(texEntry, viewSpot + vec2(0.0, -delta)).xyz;
+    return cross(top - bottom, right - left);
 }
 
 vec4 getLightFactor(vec3 grad, vec3 view)
@@ -72,7 +83,7 @@ void main(void)
     scalar.y = texture(texVolume, entry).r;
     scalar.y = clamp((scalar.y - scalarMin) / (scalarMax - scalarMin), 0.0, 1.0);
     vec3 spotCurr;
-    vec4 lfPrev = getLightFactor(makeGradient(entry), dir);
+    vec4 lfPrev = getLightFactor(entryGradient(vf_texLoc), dir);
     vec4 lfCurr;
     vec4 acc = vec4(0.0);
     for (int step = 1; step * stepSize < maxLength; ++step)

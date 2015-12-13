@@ -51,7 +51,6 @@ static dim3 getDimGrid2D(int w, int h)
     return dimGrid;
 }
 
-// TODO: make boundary gradients to face outward
 __device__ static float3 makeGradient(float3 spot)
 {
     float3 gradient;
@@ -62,6 +61,16 @@ __device__ static float3 makeGradient(float3 spot)
     gradient.z = 0.5 * (tex3D(volTex, spot.x * volWidth, spot.y * volHeight, spot.z * volDepth + 1.f)
                       - tex3D(volTex, spot.x * volWidth, spot.y * volHeight, spot.z * volDepth - 1.f));
     return gradient;
+}
+
+__device__ static float3 entryGradient(float2 viewSpot)
+{
+    float delta = 0.1f;
+    float3 left = make_float3(tex2D(entryTex, viewSpot.x - delta, viewSpot.y));
+    float3 right = make_float3(tex2D(entryTex, viewSpot.x + delta, viewSpot.y));
+    float3 top = make_float3(tex2D(entryTex, viewSpot.x, viewSpot.y + delta));
+    float3 bottom = make_float3(tex2D(entryTex, viewSpot.x, viewSpot.y - delta));
+    return cross(top - bottom, right - left);
 }
 
 __device__ static float4 getLightFactor(float3 grad, float3 view)
@@ -104,9 +113,8 @@ __global__ static void castray(int tfWidth, int tfHeight, float stepSize,
     float2 scalar = make_float2(0.f, 0.f);
     scalar.y = tex3D(volTex, entry.x * volWidth, entry.y * volHeight, entry.z * volDepth);
     scalar.y = clamp(float((scalar.y - scalarMin) / (scalarMax - scalarMin)), 0.f, 1.f);
-    float3 spotPrev = entry;
     float3 spotCurr;
-    float4 lfPrev = getLightFactor(makeGradient(entry), dir);
+    float4 lfPrev = getLightFactor(entryGradient(make_float2(x + 0.5f, y + 0.5f)), dir);
     float4 lfCurr;
     float4 acc = make_float4(0.f, 0.f, 0.f, 0.f);
     for (int step = 1; step * stepSize < maxLength; ++step)
@@ -122,7 +130,6 @@ __global__ static void castray(int tfWidth, int tfHeight, float stepSize,
         if (acc.w > 0.999f)
             break;
         scalar.y = scalar.x;
-        spotPrev = spotCurr;
         lfPrev = lfCurr;
     }
     outPtr[3 * (texWidth * y + x) + 0] = acc.x;
