@@ -45,7 +45,7 @@ void TFInteg2DGL::newResources(int resolution)
     auto f = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_3_3_Core>();
     f->initializeOpenGLFunctions();
     // painter
-    painter.initializeGL(":/volren/shaders/quad.vert", ":/volren/shaders/tfinteg2d.frag");
+    painter.initializeGL(":/volren/shaders/quad.vert", ":/volren/shaders/transferfunction/tfinteg2d.frag");
     // new texture 1d
     tex1d.reset(new QOpenGLTexture(QOpenGLTexture::Target1D));
     tex1d->setFormat(QOpenGLTexture::RGBA32F);

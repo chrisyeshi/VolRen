@@ -6,7 +6,7 @@
 #include <QMatrix>
 #include <QJsonObject>
 #include <memory>
-#include "TF.h"
+#include <TF.h>
 #include "imageabstract.h"
 #include "light.h"
 
