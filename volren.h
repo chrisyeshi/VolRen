@@ -10,6 +10,8 @@
 #include "imageabstract.h"
 #include "light.h"
 
+// TODO: profile the performance
+
 namespace yy {
 
 class IVolume;

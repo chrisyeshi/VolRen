@@ -8,6 +8,7 @@
 namespace yy {
 namespace volren {
 
+// TODO: implement frustum with CUDA
 class RaycastFurstum
 {
 public:

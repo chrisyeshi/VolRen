@@ -31,7 +31,6 @@ void VolRenRaycast::initializeGL()
 void VolRenRaycast::resize(int w, int h)
 {
     frustum.setResolution(w, h);
-//    newFBOs(w, h);
 }
 
 void VolRenRaycast::setVolume(const std::weak_ptr<IVolume> &volume)
@@ -59,7 +58,6 @@ void VolRenRaycast::setVolume(const std::weak_ptr<IVolume> &volume)
     if (!this->volume->getTexture())
         this->volume->makeTexture();
     // set cube dimension
-//    frustum.setVolumeDimension(512, 512, 512);
     frustum.setVolumeDimension(vol()->w() * vol()->sx(), vol()->h() * vol()->sy(), vol()->d() * vol()->sz());
     // volume changed
     volumeChanged();
