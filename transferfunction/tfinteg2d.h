@@ -1,7 +1,7 @@
 #ifndef TFINTEG2D_H
 #define TFINTEG2D_H
 
-#define TF_INTEGRATION_USE_GL
+//#define TF_INTEGRATION_USE_GL
 
 #if defined TF_INTEGRATION_USE_CUDA
 	#include "tfinteg2dcuda.h"
