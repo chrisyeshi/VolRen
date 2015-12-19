@@ -16,6 +16,11 @@ VolRenRaycastGL::VolRenRaycastGL()
 
 }
 
+std::unique_ptr<VolRenRaycastGL> VolRenRaycastGL::create()
+{
+    return std::unique_ptr<VolRenRaycastGL>(new VolRenRaycastGL());
+}
+
 VolRenRaycastGL::~VolRenRaycastGL()
 {
 

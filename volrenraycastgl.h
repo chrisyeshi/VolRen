@@ -21,6 +21,7 @@ class VolRenRaycastGL : public TFIntegrated<VolRenRaycast>
 {
 public:
     VolRenRaycastGL();
+    static std::unique_ptr<VolRenRaycastGL> create();
     virtual ~VolRenRaycastGL();
 
     virtual void initializeGL();

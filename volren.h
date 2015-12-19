@@ -26,7 +26,6 @@ enum Filter { Filter_Linear, Filter_Nearest };
 class VolRen
 {
 public:
-    static std::unique_ptr<VolRen> create(const Method& method);
     VolRen(const Method& method) : scalarMin(0.f), scalarMax(1.f), method(method) {}
     virtual ~VolRen() {}
 
@@ -48,6 +47,17 @@ private:
     Method method;
 
     VolRen(); // Not implemented
+};
+
+class VolRenFactory
+{
+public:
+    typedef std::function<std::unique_ptr<VolRen>()> CreateFunc;
+    static std::vector<Method> methods();
+    static std::unique_ptr<VolRen> create(const Method& method);
+
+private:
+    static std::map<Method, CreateFunc> creators;
 };
 
 } // namespace volren

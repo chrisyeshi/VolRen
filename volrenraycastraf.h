@@ -14,6 +14,7 @@ class VolRenRaycastRAF : public VolRenRaycast
 {
 public:
     VolRenRaycastRAF();
+    static std::unique_ptr<VolRenRaycastRAF> create();
     virtual ~VolRenRaycastRAF();
 
     virtual void initializeGL();

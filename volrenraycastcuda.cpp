@@ -40,6 +40,11 @@ VolRenRaycastCuda::VolRenRaycastCuda()
 
 }
 
+std::unique_ptr<VolRenRaycastCuda> VolRenRaycastCuda::create()
+{
+    return std::unique_ptr<VolRenRaycastCuda>(new VolRenRaycastCuda());
+}
+
 VolRenRaycastCuda::~VolRenRaycastCuda()
 {
     if (entryRes)  cc(cudaGraphicsUnregisterResource(entryRes));

@@ -14,6 +14,7 @@ class VolRenRaycastCuda : public TFIntegrated<VolRenRaycast>
 {
 public:
     VolRenRaycastCuda();
+    static std::unique_ptr<VolRenRaycastCuda> create();
     virtual ~VolRenRaycastCuda();
 
     virtual void initializeGL();

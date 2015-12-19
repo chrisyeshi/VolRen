@@ -45,6 +45,11 @@ VolRenRaycastRAF::VolRenRaycastRAF()
 
 }
 
+std::unique_ptr<VolRenRaycastRAF> VolRenRaycastRAF::create()
+{
+    return std::unique_ptr<VolRenRaycastRAF>(new VolRenRaycastRAF());
+}
+
 VolRenRaycastRAF::~VolRenRaycastRAF()
 {
     if (entryRes) cc(cudaGraphicsUnregisterResource(entryRes));

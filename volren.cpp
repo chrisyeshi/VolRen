@@ -9,20 +9,28 @@
 namespace yy {
 namespace volren {
 
-// TODO: put into a VolRenFactory and use a map for the creators,
-// C++ doesn't support static initialization in a static library (lame)
-std::unique_ptr<VolRen> VolRen::create(const Method &method)
-{
-    assert(Method_Unknown != method);
-    if (Method_Raycast_GL == method)
-        return std::unique_ptr<VolRen>(new VolRenRaycastGL());
+// TODO: automatic registration. C++ doesn't support static initialization in a static library (lame)
+std::map<Method, VolRenFactory::CreateFunc> VolRenFactory::creators
+  = { { Method_Raycast_GL,   VolRenRaycastGL::create }
 #ifdef ENABLE_CUDA
-    if (Method_Raycast_CUDA == method)
-        return std::unique_ptr<VolRen>(new VolRenRaycastCuda());
-    if (Method_Raycast_RAF == method)
-        return std::unique_ptr<VolRen>(new VolRenRaycastRAF());
+    , { Method_Raycast_CUDA, VolRenRaycastCuda::create }
+    , { Method_Raycast_RAF,  VolRenRaycastRAF::create }
 #endif // ENABLE_CUDA
-    return nullptr;
+    };
+
+std::vector<Method> VolRenFactory::methods()
+{
+    std::vector<Method> ret;
+    for (auto entry : creators)
+        ret.push_back(entry.first);
+    return ret;
+}
+
+std::unique_ptr<VolRen> VolRenFactory::create(const Method &method)
+{
+    if (0 == creators.count(method))
+        return nullptr;
+    return creators[method]();
 }
 
 } // namespace volren

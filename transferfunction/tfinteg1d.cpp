@@ -1,4 +1,5 @@
 #include "tfinteg1d.h"
+#include <cmath>
 #include <QOpenGLTexture>
 
 namespace yy {
