@@ -60,6 +60,21 @@ private:
     static std::map<Method, CreateFunc> creators;
 };
 
+class VolRenNull : public VolRen
+{
+public:
+    VolRenNull() : VolRen(Method_Unknown) {}
+    static std::unique_ptr<VolRenNull> create() { return std::unique_ptr<VolRenNull>(new VolRenNull()); }
+    virtual ~VolRenNull() {}
+
+    virtual void initializeGL() {}
+    virtual void resize(int w, int h) {}
+    virtual void setVolume(const std::weak_ptr<IVolume>& volume) {}
+    virtual void setTF(const mslib::TF& tf, bool preinteg, float stepsize, Filter filter) {}
+    virtual void render(const QMatrix4x4& v, const QMatrix4x4& p) {}
+    virtual std::shared_ptr<ImageAbstract> output() const { return std::make_shared<ImageNull>(); }
+};
+
 } // namespace volren
 } // namespace yy
 

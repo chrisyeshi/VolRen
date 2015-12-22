@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.1.0 FATAL_ERROR)
 
+# TODO: get rid of Qt
+
 file(GLOB IMAGE_SOURCES *.cpp)
 file(GLOB IMAGE_HEADERS *.h)
 file(GLOB IMAGE_SHADERS *.vert *.frag)

@@ -7,7 +7,7 @@ namespace volren {
 class ImageAbstract
 {
 public:
-    enum Type { TYPE_FBO, TYPE_TEXTURE, TYPE_PBO, TYPE_PBO_RAF };
+    enum Type { TYPE_FBO, TYPE_TEXTURE, TYPE_PBO, TYPE_PBO_RAF, TYPE_NULL };
 
 	ImageAbstract(Type type) : _type(type) {}
     virtual ~ImageAbstract() {}
@@ -20,6 +20,14 @@ private:
 	Type _type;
 
 	ImageAbstract(); // Not implemented!!!
+};
+
+class ImageNull : public ImageAbstract
+{
+public:
+	ImageNull() : ImageAbstract(TYPE_NULL) {}
+	virtual void initialize() {}
+	virtual void draw() {}
 };
 
 } // namespace volren

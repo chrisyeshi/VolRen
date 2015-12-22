@@ -29,7 +29,7 @@ std::vector<Method> VolRenFactory::methods()
 std::unique_ptr<VolRen> VolRenFactory::create(const Method &method)
 {
     if (0 == creators.count(method))
-        return nullptr;
+        return std::unique_ptr<VolRen>(new VolRenNull());
     return creators[method]();
 }
 
