@@ -36,6 +36,8 @@ protected:
     std::shared_ptr<cudaArray> tfArr;
     int texWidth, texHeight, layers;
     bool preintegrate;
+    Filter tfFilter;
+    float stepsize;
     QSharedPointer<QOpenGLTexture> tfTex;
 
 private:

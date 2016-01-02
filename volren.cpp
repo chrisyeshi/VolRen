@@ -1,5 +1,6 @@
 #include "volren.h"
 #include <cassert>
+#include <json/json.h>
 #include "volrenraycastgl.h"
 #ifdef ENABLE_CUDA
     #include "volrenraycastcuda.h"
@@ -8,6 +9,37 @@
 
 namespace yy {
 namespace volren {
+
+static std::map<Method, std::string> method2string
+        = { { Method_Raycast_CUDA, "Method_Raycast_CUDA" },
+            { Method_Raycast_GL,   "Method_Raycast_GL" },
+            { Method_Raycast_RAF,  "Method_Raycast_RAF" },
+            { Method_Unknown,      "Method_Unknown" } };
+
+void VolRen::setParaSheet(const Json::Value &json)
+{
+    if (json.isMember("Method"))
+        assert(json["Method"].asString() == method2string[this->method]);
+    if (json.isMember("ScalarRange"))
+        this->setScalarRange(json["ScalarRange"][0].asFloat(), json["ScalarRange"][1].asFloat());
+    if (json.isMember("Lights"))
+    {
+        lights.resize(json["Lights"].size());
+        for (unsigned int iLight = 0; iLight < lights.size(); ++iLight)
+            lights[iLight].fromJson(json["Lights"][iLight]);
+    }
+}
+
+Json::Value VolRen::getParaSheet() const
+{
+    Json::Value ret;
+    ret["Method"] = method2string[this->method];
+    ret["ScalarRange"][0] = this->scalarMin;
+    ret["ScalarRange"][1] = this->scalarMax;
+    for (auto light : lights)
+        ret["Lights"].append(light.toJson());
+    return ret;
+}
 
 // TODO: automatic registration. C++ doesn't support static initialization in a static library (lame)
 std::map<Method, VolRenFactory::CreateFunc> VolRenFactory::creators

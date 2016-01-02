@@ -33,7 +33,7 @@ VolRenRaycastCuda::VolRenRaycastCuda()
  : TFIntegrated<VolRenRaycast>(Method_Raycast_CUDA)
  , outPBO(0)
  , entryRes(NULL), exitRes(NULL), outRes(NULL)
- , texWidth(defaultFBOSize), texHeight(defaultFBOSize)
+ , texWidth(frustum.getTextureWidth()), texHeight(frustum.getTextureHeight())
  , volRes(0)
  , tfFullRes(0), tfBackRes(0)
 {

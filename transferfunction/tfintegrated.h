@@ -4,6 +4,7 @@
 #include <tfintegrater.h>
 #include <QOpenGLTexture>
 #include <cassert>
+#include <json/json.h>
 #include <volren.h>
 #include <TF.h>
 
@@ -14,10 +15,21 @@ template <typename BASE>
 class TFIntegrated : public BASE
 {
 public:
-    TFIntegrated(Method method) : BASE(method), tfInteg(new TFIntegrater()) {}
+    TFIntegrated(Method method)
+      : BASE(method), tfInteg(new TFIntegrater())
+      , tf(1024, 1024), tfFilter(Filter_Linear), stepsize(0.01f) {}
+
+    virtual void initializeGL()
+    {
+        BASE::initializeGL();
+        this->setTF(tf, tfInteg->isPreinteg(), stepsize, tfFilter);
+    }
+
     virtual void setTF(const mslib::TF& tf, bool preinteg, float stepsize, Filter filter)
     {
-        BASE::setTF(tf, preinteg, stepsize, filter);
+        this->tf = tf;
+        this->tfFilter = filter;
+        this->stepsize = stepsize;
         tfInteg->convertTo(preinteg);
         tfInteg->integrate(tf.colorMap(), tf.resolution(), stepsize);
         static std::map<Filter, QOpenGLTexture::Filter> vr2qt
@@ -30,8 +42,59 @@ public:
         tfInteg->getTexBack()->setWrapMode(QOpenGLTexture::ClampToEdge);
     }
 
+    virtual void setParaSheet(const Json::Value& json)
+    {
+        BASE::setParaSheet(json);
+        if (!json.isMember("TransferFunction"))
+            return;
+        const Json::Value& tfJson = json["TransferFunction"];
+        const int nRgba = 4;
+        mslib::TF ntf = this->tf;
+        bool nPreinteg = this->tfInteg->isPreinteg();
+        Filter nTfFilter = this->tfFilter;
+        float nStepsize = this->stepsize;
+        if (tfJson.isMember("Colormap"))
+        {
+            ntf = mslib::TF(tfJson["Colormap"].size(), tfJson["Colormap"].size());
+            for (int iColor = 0; iColor < tfJson["Colormap"].size(); ++iColor)
+            for (int iValue = 0; iValue < nRgba; ++iValue)
+                ntf.colorMap()[nRgba * iColor + iValue] = tfJson["Colormap"][iColor][iValue].asFloat();
+        }
+        if (tfJson.isMember("Preinteg"))
+            nPreinteg = tfJson["Preinteg"].asBool();
+        if (tfJson.isMember("Filter"))
+        {
+            static std::map<std::string, Filter> string2filter
+                    = { { "Filter_Nearest", Filter_Nearest },
+                        { "Filter_Linear",  Filter_Linear } };
+            nTfFilter = string2filter[tfJson["Filter"].asString()];
+        }
+        if (tfJson.isMember("Stepsize"))
+            nStepsize = tfJson["stepsize"].asFloat();
+        this->setTF(ntf, nPreinteg, nStepsize, nTfFilter);
+    }
+
+    virtual Json::Value getParaSheet() const
+    {
+        Json::Value ret = BASE::getParaSheet();
+        const int nRgba = 4;
+        for (int iColor = 0; iColor < tf.resolution(); ++iColor)
+        for (int iValue = 0; iValue < nRgba; ++iValue)
+            ret["TransferFunction"]["Colormap"][iColor][iValue] = tf.colorMap()[nRgba * iColor + iValue];
+        static std::map<Filter, std::string> filter2string
+                = { { Filter_Nearest, "Filter_Nearest" },
+                    { Filter_Linear,  "Filter_Linear" } };
+        ret["TransferFunction"]["Preinteg"] = tfInteg->isPreinteg();
+        ret["TransferFunction"]["Filter"] = filter2string[tfFilter];
+        ret["TransferFunction"]["Stepsize"] = stepsize;
+        return ret;
+    }
+
 protected:
     std::unique_ptr<TFIntegrater> tfInteg;
+    mslib::TF tf;
+    Filter tfFilter;
+    float stepsize;
 
 private:
     TFIntegrated(); // Not implemented!!!

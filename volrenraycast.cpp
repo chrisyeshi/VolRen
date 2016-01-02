@@ -1,6 +1,7 @@
 #include "volrenraycast.h"
 #include <map>
 #include <cassert>
+#include <json/json.h>
 #include <QMatrix4x4>
 #include <QOpenGLFunctions>
 #include "imagetex.h"
@@ -11,9 +12,6 @@ namespace volren {
 
 VolRenRaycast::VolRenRaycast(const Method &method)
  : VolRen(method)
- , tfFilter(Filter_Linear)
- , tfInteg(new TFIntegrater())
- , stepsize(0.01f)
 {
 
 }
@@ -25,7 +23,6 @@ VolRenRaycast::~VolRenRaycast()
 void VolRenRaycast::initializeGL()
 {
     frustum.initializeGL();
-    this->setTF(mslib::TF(1024, 1024), true, stepsize, tfFilter);
 }
 
 void VolRenRaycast::resize(int w, int h)
@@ -63,20 +60,27 @@ void VolRenRaycast::setVolume(const std::weak_ptr<IVolume> &volume)
     volumeChanged();
 }
 
-void VolRenRaycast::setTF(const mslib::TF &tf, bool preinteg, float stepsize, Filter filter)
-{
-    this->tfFilter = filter;
-    this->stepsize = stepsize;
-
-//    tfChanged(tf, preinteg, stepsize, filter);
-}
-
 void VolRenRaycast::render(const QMatrix4x4& v, const QMatrix4x4 &p)
 {
     frustum.entryTexture(v, p);
     frustum.exitTexture(v, p);
     // raycast
     raycast(frustum.modelMatrix(), v, p);
+}
+
+void VolRenRaycast::setParaSheet(const Json::Value &json)
+{
+    VolRen::setParaSheet(json);
+    if (json.isMember("Frustum"))
+        this->resize(json["Frustum"]["Width"].asInt(), json["Frustum"]["Height"].asInt());
+}
+
+Json::Value VolRenRaycast::getParaSheet() const
+{
+    Json::Value ret = VolRen::getParaSheet();
+    ret["Frustum"]["Width"] = frustum.getTextureWidth();
+    ret["Frustum"]["Height"] = frustum.getTextureHeight();
+    return ret;
 }
 
 } // namespace volren

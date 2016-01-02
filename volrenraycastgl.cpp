@@ -28,14 +28,15 @@ VolRenRaycastGL::~VolRenRaycastGL()
 
 void VolRenRaycastGL::initializeGL()
 {
-    VolRenRaycast::initializeGL();
+    // TODO: VolRenRaycast to TFIntegrated<VolRenRaycast> in VolRenRaycastCuda
+    TFIntegrated<VolRenRaycast>::initializeGL();
     painter.initializeGL(":/volren/shaders/raycast.vert", ":/volren/shaders/raycast.frag");
     newFBOs();
 }
 
 void VolRenRaycastGL::resize(int w, int h)
 {
-    VolRenRaycast::resize(w, h);
+    TFIntegrated<VolRenRaycast>::resize(w, h);
     newFBOs();
 }
 

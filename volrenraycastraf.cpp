@@ -38,9 +38,11 @@ VolRenRaycastRAF::VolRenRaycastRAF()
  , entryRes(NULL), exitRes(NULL)
  , rafRes(NULL), depRes(NULL)
  , volRes(NULL)
- , texWidth(defaultFBOSize), texHeight(defaultFBOSize)
+ , texWidth(frustum.getTextureWidth()), texHeight(frustum.getTextureHeight())
  , layers(defaultLayers)
  , preintegrate(true)
+ , tfFilter(Filter_Linear)
+ , stepsize(0.01f)
 {
 
 }
