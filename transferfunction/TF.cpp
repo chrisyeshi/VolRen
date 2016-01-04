@@ -89,7 +89,6 @@ TF::~TF()
 TF &TF::operator = (const TF &other)
 {
     if (_colorMap != nullptr) delete [] _colorMap;
-    std::cout << _alphaArray << std::endl;
     if (_alphaArray != nullptr) delete [] _alphaArray;
     _resolution = other._resolution;
     _colorMap = new float[_resolution * 4];

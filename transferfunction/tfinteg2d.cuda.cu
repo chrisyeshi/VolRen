@@ -29,7 +29,7 @@ __global__ void tfIntegrate2D_kernel(float* tf1d, float segLen, float* tf2dfull,
         spotColor.y *= spotColor.w;
         spotColor.z *= spotColor.w;
         // weighted for front and back samples
-        float weightBack = (steps - 1 == 0) ? 1.f : float(step) / float(steps - 1);
+        float weightBack = (steps - 1 == 0) ? 0.f : float(step) / float(steps - 1);
         backColor = spotColor * weightBack;
         // attenuate back
         back += backColor * (1.f - full.w);
