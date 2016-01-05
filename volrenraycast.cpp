@@ -71,8 +71,8 @@ void VolRenRaycast::render(const QMatrix4x4& v, const QMatrix4x4 &p)
 void VolRenRaycast::setParaSheet(const Json::Value &json)
 {
     VolRen::setParaSheet(json);
-    if (json.isMember("Frustum"))
-        this->resize(json["Frustum"]["Width"].asInt(), json["Frustum"]["Height"].asInt());
+//    if (json.isMember("Frustum"))
+//        this->resize(json["Frustum"]["Width"].asInt(), json["Frustum"]["Height"].asInt());
 }
 
 Json::Value VolRenRaycast::getParaSheet() const

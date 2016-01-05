@@ -28,8 +28,8 @@ public:
         ret["Color"][2] = color.z();
         ret["Ambient"] = ambient;
         ret["Diffuse"] = diffuse;
-        ret["specular"] = specular;
-        ret["shininess"] = shininess;
+        ret["Specular"] = specular;
+        ret["Shininess"] = shininess;
         return ret;
     }
 

@@ -70,7 +70,7 @@ public:
             nTfFilter = string2filter[tfJson["Filter"].asString()];
         }
         if (tfJson.isMember("Stepsize"))
-            nStepsize = tfJson["stepsize"].asFloat();
+            nStepsize = tfJson["Stepsize"].asFloat();
         this->setTF(ntf, nPreinteg, nStepsize, nTfFilter);
     }
 
