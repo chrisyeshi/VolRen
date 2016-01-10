@@ -4,6 +4,7 @@
 #include <tfintegrater.h>
 #include <QOpenGLTexture>
 #include <cassert>
+#include <string>
 #include <json/json.h>
 #include <volren.h>
 #include <TF.h>
@@ -55,10 +56,21 @@ public:
         float nStepsize = this->stepsize;
         if (tfJson.isMember("Colormap"))
         {
-            ntf = mslib::TF(tfJson["Colormap"].size(), tfJson["Colormap"].size());
-            for (int iColor = 0; iColor < tfJson["Colormap"].size(); ++iColor)
-            for (int iValue = 0; iValue < nRgba; ++iValue)
-                ntf.colorMap()[nRgba * iColor + iValue] = tfJson["Colormap"][iColor][iValue].asFloat();
+            Json::Value cm = tfJson["Colormap"];
+            if (cm.isArray())
+            {
+                ntf = mslib::TF(tfJson["Colormap"].size(), tfJson["Colormap"].size());
+                for (int iColor = 0; iColor < tfJson["Colormap"].size(); ++iColor)
+                for (int iValue = 0; iValue < nRgba; ++iValue)
+                    ntf.colorMap()[nRgba * iColor + iValue] = tfJson["Colormap"][iColor][iValue].asFloat();
+            } else if (cm.isString())
+            {
+                const int nRgba = 4;
+                std::string cms = tfJson["Colormap"].asString();
+                int resolution = cms.size() / sizeof(float) / nRgba;
+                ntf = mslib::TF(resolution, resolution);
+                memcpy(reinterpret_cast<char*>(ntf.colorMap()), cms.data(), cms.size());
+            }
         }
         if (tfJson.isMember("Preinteg"))
             nPreinteg = tfJson["Preinteg"].asBool();
@@ -78,9 +90,12 @@ public:
     {
         Json::Value ret = BASE::getParaSheet();
         const int nRgba = 4;
-        for (int iColor = 0; iColor < tf.resolution(); ++iColor)
-        for (int iValue = 0; iValue < nRgba; ++iValue)
-            ret["TransferFunction"]["Colormap"][iColor][iValue] = tf.colorMap()[nRgba * iColor + iValue];
+        const char* cmp = reinterpret_cast<const char*>(tf.colorMap());
+        std::string cms(cmp, cmp + tf.resolution() * nRgba * sizeof(float));
+        ret["TransferFunction"]["Colormap"] = cms;
+//        for (int iColor = 0; iColor < tf.resolution(); ++iColor)
+//        for (int iValue = 0; iValue < nRgba; ++iValue)
+//            ret["TransferFunction"]["Colormap"][iColor][iValue] = tf.colorMap()[nRgba * iColor + iValue];
         static std::map<Filter, std::string> filter2string
                 = { { Filter_Nearest, "Filter_Nearest" },
                     { Filter_Linear,  "Filter_Linear" } };

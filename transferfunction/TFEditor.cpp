@@ -131,7 +131,7 @@ TFEditor::TFEditor(QWidget *parent, int resolution, int arraySize)
     _drawAreaRightMargin = 8;
     _colorMapAreaDrawAreaVerticalSpacing = 4;
     _drawAreaColorControlAreaVerticalSpacing = 4;
-    _isTracking = true;
+    _isTracking = false;
 
     bool enableVSlider = false;
     bool enableButtons = false;
@@ -233,8 +233,7 @@ void TFEditor::setTF(const TF &tf)
 {
     *_tf = tf;
     updateTF(true, true);
-    emit tfChanged();
-    emit tfChanged(*_tf);
+    emitTFChanged(true);
 }
 
 void TFEditor::setResolution(int resolution)
@@ -246,7 +245,7 @@ void TFEditor::setResolution(int resolution)
     }
     _tf = new TF(resolution, resolution);
     updateTF(true, true);
-    emitTFChanged();
+    emitTFChanged(true);
 }
 
 void TFEditor::setHistogram(const Histogram &histogram)
@@ -264,7 +263,7 @@ void TFEditor::loadTF(const QString &fileName)
 {
     _tf->read(fileName.toLatin1().constData());
     updateTF(true, true);
-    emitTFChanged();
+    emitTFChanged(true);
 }
 
 void TFEditor::saveTF(const QString &fileName) const
@@ -305,7 +304,7 @@ void TFEditor::addGaussianObject()
     _tf->addGaussianObject(0.5f, 0.1f, hf);
     _colorMapArea->updateImage();
     repaint();
-    emitTFChanged();
+    emitTFChanged(true);
 }
 
 void TFEditor::setBGColor(const QColor &color)
@@ -319,7 +318,7 @@ void TFEditor::setBGColor(const QColor &color)
         _colorMapArea->updateImage();
         repaint();
         emit bgColorChanged(color);
-        emitTFChanged();
+        emitTFChanged(true);
     }
 }
 
@@ -532,7 +531,7 @@ void TFDrawArea::mouseMoveEvent(QMouseEvent *e)
     if (_changed && _tfEditor->_isTracking)
     {
         _changed = false;
-        _tfEditor->emitTFChanged();
+        _tfEditor->emitTFChanged(false);
     }
 }
 
@@ -592,7 +591,7 @@ void TFDrawArea::mouseReleaseEvent(QMouseEvent *e)
     if (_changed)
     {
         _changed = false;
-        _tfEditor->emitTFChanged();
+        _tfEditor->emitTFChanged(true);
     }
 }
 
@@ -934,7 +933,7 @@ void TFColorControlArea::mouseDoubleClickEvent(QMouseEvent *e)
                 tf().colorControl(index).color[1] = (float)newColor.greenF();
                 tf().colorControl(index).color[2] = (float)newColor.blueF();
                 _tfEditor->updateTF(false, true);
-                _tfEditor->emitTFChanged();
+                _tfEditor->emitTFChanged(false);
             }
             e->accept();
         }
@@ -944,7 +943,7 @@ void TFColorControlArea::mouseDoubleClickEvent(QMouseEvent *e)
             tf().insertColorControl(value);
             _activeControl = tf().colorControlCount() - 1;
             _tfEditor->updateTF(false, true);
-            _tfEditor->emitTFChanged();
+            _tfEditor->emitTFChanged(false);
             e->accept();
         }
     }
@@ -1023,7 +1022,7 @@ void TFColorControlArea::mouseReleaseEvent(QMouseEvent*)
     if (_draggedControl >= 0)
     {
         _draggedControl = -1;
-        _tfEditor->emitTFChanged();
+        _tfEditor->emitTFChanged(true);
     }
 }
 

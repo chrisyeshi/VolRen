@@ -103,7 +103,7 @@ protected:
 
     void updateTF(bool drawArray = true, bool colorControl = true);
 
-    void emitTFChanged() { emit tfChanged(); emit tfChanged(*_tf); }
+    void emitTFChanged(bool makeHistory = false) { emit tfChanged(); emit tfChanged(makeHistory); emit tfChanged(*_tf); }
 
 private:
     TF *_tf;
@@ -141,6 +141,7 @@ public slots:
 
 signals:
     void tfChanged();
+    void tfChanged(bool makeHistory);
 //    void tfChanged(mslib::TF &tf);
     void tfChanged(const mslib::TF &tf);
     void bgColorChanged(const QColor &color);

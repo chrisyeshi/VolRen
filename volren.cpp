@@ -36,8 +36,10 @@ Json::Value VolRen::getParaSheet() const
     ret["Method"] = method2string[this->method];
     ret["ScalarRange"][0] = this->scalarMin;
     ret["ScalarRange"][1] = this->scalarMax;
+    Json::Value jsonLights;
     for (auto light : lights)
-        ret["Lights"].append(light.toJson());
+        jsonLights.append(light.toJson());
+    ret["Lights"] = jsonLights;
     return ret;
 }
 
