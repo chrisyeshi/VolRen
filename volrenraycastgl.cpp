@@ -10,8 +10,10 @@
 namespace yy {
 namespace volren {
 
+#define BASE TFIntegrated<VolRenRaycast>
+
 VolRenRaycastGL::VolRenRaycastGL()
- : TFIntegrated<VolRenRaycast>(Method_Raycast_GL)
+ : BASE(Method_Raycast_GL)
 {
 
 }
@@ -29,14 +31,14 @@ VolRenRaycastGL::~VolRenRaycastGL()
 void VolRenRaycastGL::initializeGL()
 {
     // TODO: VolRenRaycast to TFIntegrated<VolRenRaycast> in VolRenRaycastCuda
-    TFIntegrated<VolRenRaycast>::initializeGL();
+    BASE::initializeGL();
     painter.initializeGL(":/volren/shaders/raycast.vert", ":/volren/shaders/raycast.frag");
     newFBOs();
 }
 
 void VolRenRaycastGL::resize(int w, int h)
 {
-    TFIntegrated<VolRenRaycast>::resize(w, h);
+    BASE::resize(w, h);
     newFBOs();
 }
 

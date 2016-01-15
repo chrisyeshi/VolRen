@@ -23,7 +23,7 @@ public:
     virtual void initializeGL()
     {
         BASE::initializeGL();
-        this->setTF(tf, tfInteg->isPreinteg(), stepsize, tfFilter);
+        setTF(tf, tfInteg->isPreinteg(), stepsize, tfFilter);
     }
 
     virtual void setTF(const mslib::TF& tf, bool preinteg, float stepsize, Filter filter)

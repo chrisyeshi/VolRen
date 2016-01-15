@@ -65,6 +65,7 @@ void VolRenRaycastRAF::initializeGL()
 {
     VolRenRaycast::initializeGL();
     newFBOs(frustum.getTextureWidth(), frustum.getTextureHeight());
+    setTF(mslib::TF(), false, stepsize, tfFilter);
 }
 
 void VolRenRaycastRAF::resize(int w, int h)

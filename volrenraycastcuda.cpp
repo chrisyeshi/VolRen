@@ -29,8 +29,10 @@ static void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
 namespace yy {
 namespace volren {
 
+#define BASE TFIntegrated<VolRenRaycast>
+
 VolRenRaycastCuda::VolRenRaycastCuda()
- : TFIntegrated<VolRenRaycast>(Method_Raycast_CUDA)
+ : BASE(Method_Raycast_CUDA)
  , outPBO(0)
  , entryRes(NULL), exitRes(NULL), outRes(NULL)
  , texWidth(frustum.getTextureWidth()), texHeight(frustum.getTextureHeight())
@@ -59,19 +61,19 @@ VolRenRaycastCuda::~VolRenRaycastCuda()
 
 void VolRenRaycastCuda::initializeGL()
 {
-    VolRenRaycast::initializeGL();
+    BASE::initializeGL();
     updateCUDAResources();
 }
 
 void VolRenRaycastCuda::resize(int w, int h)
 {
-    VolRenRaycast::resize(w, h);
+    BASE::resize(w, h);
     updateCUDAResources();
 }
 
 void VolRenRaycastCuda::setTF(const mslib::TF &tf, bool preinteg, float stepsize, Filter filter)
 {
-    TFIntegrated<VolRenRaycast>::setTF(tf, preinteg, stepsize, filter);
+    BASE::setTF(tf, preinteg, stepsize, filter);
     if (tfFullRes) cc(cudaGraphicsUnregisterResource(tfFullRes));
     cc(cudaGraphicsGLRegisterImage(&tfFullRes, tfInteg->getTexFull()->textureId(), GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly));
     if (tfBackRes) cc(cudaGraphicsUnregisterResource(tfBackRes));
