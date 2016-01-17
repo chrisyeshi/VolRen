@@ -3,7 +3,7 @@
 #include <cassert>
 #include <QOpenGLFunctions_3_3_Core>
 #include "imageraf.h"
-#include "volumegl.h"
+#include "volumeglcuda.h"
 
 #undef near
 #undef far
@@ -37,7 +37,6 @@ VolRenRaycastRAF::VolRenRaycastRAF()
  : VolRenRaycast(Method_Raycast_RAF)
  , entryRes(NULL), exitRes(NULL)
  , rafRes(NULL), depRes(NULL)
- , volRes(NULL)
  , texWidth(frustum.getTextureWidth()), texHeight(frustum.getTextureHeight())
  , layers(defaultLayers)
  , preintegrate(true)
@@ -58,7 +57,6 @@ VolRenRaycastRAF::~VolRenRaycastRAF()
     if (exitRes)  cc(cudaGraphicsUnregisterResource(exitRes));
     if (rafRes)   cc(cudaGraphicsUnregisterResource(rafRes));
     if (depRes)   cc(cudaGraphicsUnregisterResource(depRes));
-    if (volRes)   cc(cudaGraphicsUnregisterResource(volRes));
 }
 
 void VolRenRaycastRAF::initializeGL()
@@ -72,6 +70,31 @@ void VolRenRaycastRAF::resize(int w, int h)
 {
     VolRenRaycast::resize(w, h);
     newFBOs(w, h);
+}
+
+// TODO: SetVolumeCUDAed<BASE>
+void VolRenRaycastRAF::setVolume(const std::shared_ptr<IVolume>& volume)
+{
+    // check supported pixel type
+    static std::map<Volume::DataType, QOpenGLTexture::PixelType> dt2pt
+            = {{Volume::DT_Char, QOpenGLTexture::Int8},
+               {Volume::DT_Unsigned_Char, QOpenGLTexture::UInt8},
+               {Volume::DT_Float, QOpenGLTexture::Float32}};
+    if (0 == dt2pt.count(volume->pixelType()))
+    {
+        std::cout << "Unsupported pixel type..." << std::endl;
+        return;
+    }
+    // whether volume has the interface I need
+    std::shared_ptr<IVolumeCUDA> ptr = std::dynamic_pointer_cast<IVolumeCUDA>(volume);
+    if (!ptr)
+        ptr.reset(new VolumeGLCUDA(volume));
+    this->volume = ptr;
+    // set bounding box dimension
+    frustum.setVolumeDimension(
+        this->volume->w() * this->volume->sx(),
+        this->volume->h() * this->volume->sy(),
+        this->volume->d() * this->volume->sz());
 }
 
 void VolRenRaycastRAF::setTF(const mslib::TF &tf, bool preinteg, float stepsize, Filter filter)
@@ -133,6 +156,9 @@ void VolRenRaycastRAF::newFBOs(int w, int h)
 
 void VolRenRaycastRAF::raycast(const QMatrix4x4& m, const QMatrix4x4& v, const QMatrix4x4& p)
 {
+    // TODO: getCUDAMappedArray();
+    cudaGraphicsResource_t volRes = this->volume->getCUDAResource();
+
     cc(cudaGraphicsMapResources(1, &entryRes, 0));
     cc(cudaGraphicsMapResources(1, &exitRes, 0));
     cc(cudaGraphicsMapResources(1, &rafRes, 0));
@@ -169,7 +195,7 @@ void VolRenRaycastRAF::raycast(const QMatrix4x4& m, const QMatrix4x4& v, const Q
     for (int i = 0; i < layers; ++i)
         binDivs[i] = float(i) * 1.f / float(layers);
     // cast
-    rafcast(vol()->w(), vol()->h(), vol()->d(), volArr,
+    rafcast(this->volume->w(), this->volume->h(), this->volume->d(), volArr,
             tfTex->width(), stepsize, vr2cu[tfFilter], preintegrate, tfArr.get(),
             scalarMin, scalarMax,
             texWidth, texHeight, entryArr, exitArr,
@@ -184,12 +210,6 @@ void VolRenRaycastRAF::raycast(const QMatrix4x4& m, const QMatrix4x4& v, const Q
     cc(cudaGraphicsUnmapResources(1, &exitRes, 0));
     cc(cudaGraphicsUnmapResources(1, &rafRes, 0));
     cc(cudaGraphicsUnmapResources(1, &depRes, 0));
-}
-
-void VolRenRaycastRAF::volumeChanged()
-{
-    if (volRes) cc(cudaGraphicsUnregisterResource(volRes));
-    cc(cudaGraphicsGLRegisterImage(&volRes, volume->getTexture()->textureId(), GL_TEXTURE_3D, cudaGraphicsRegisterFlagsReadOnly));
 }
 
 void VolRenRaycastRAF::newOutPBO(std::shared_ptr<GLuint>* outPBO, cudaGraphicsResource** outRes, int w, int h, int l)

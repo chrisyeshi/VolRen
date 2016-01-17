@@ -4,8 +4,8 @@
 #include <cstdio>
 #include <QMatrix4x4>
 #include <QOpenGLFunctions>
+#include <volumegl.h>
 #include "imagetex.h"
-#include "volumegl.h"
 
 namespace yy {
 namespace volren {
@@ -40,6 +40,30 @@ void VolRenRaycastGL::resize(int w, int h)
 {
     BASE::resize(w, h);
     newFBOs();
+}
+
+void VolRenRaycastGL::setVolume(const std::shared_ptr<IVolume> &volume)
+{
+    // check supported pixel type
+    static std::map<Volume::DataType, QOpenGLTexture::PixelType> dt2pt
+            = {{Volume::DT_Char, QOpenGLTexture::Int8},
+               {Volume::DT_Unsigned_Char, QOpenGLTexture::UInt8},
+               {Volume::DT_Float, QOpenGLTexture::Float32}};
+    if (0 == dt2pt.count(volume->pixelType()))
+    {
+        std::cout << "Unsupported pixel type..." << std::endl;
+        return;
+    }
+    // whether volume has the interface I requires
+    std::shared_ptr<IVolumeGL> ptr = std::dynamic_pointer_cast<IVolumeGL>(volume);
+    if (!ptr)
+        ptr.reset(new VolumeGL(volume));
+    this->volume = ptr;
+    // set bounding box dimension
+    frustum.setVolumeDimension(
+        this->volume->w() * this->volume->sx(),
+        this->volume->h() * this->volume->sy(),
+        this->volume->d() * this->volume->sz());
 }
 
 std::shared_ptr<ImageAbstract> VolRenRaycastGL::output() const

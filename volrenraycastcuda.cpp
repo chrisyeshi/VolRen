@@ -1,8 +1,8 @@
 #include "volrenraycastcuda.h"
 #include "volrenraycastcuda.cuda.h"
 #include <cassert>
+#include <volumeglcuda.h>
 #include "imagepbo.h"
-#include "volumegl.h"
 
 //
 //
@@ -36,7 +36,7 @@ VolRenRaycastCuda::VolRenRaycastCuda()
  , outPBO(0)
  , entryRes(NULL), exitRes(NULL), outRes(NULL)
  , texWidth(frustum.getTextureWidth()), texHeight(frustum.getTextureHeight())
- , volRes(0)
+// , volRes(0)
  , tfFullRes(0), tfBackRes(0)
 {
 
@@ -52,7 +52,7 @@ VolRenRaycastCuda::~VolRenRaycastCuda()
     if (entryRes)  cc(cudaGraphicsUnregisterResource(entryRes));
     if (exitRes)   cc(cudaGraphicsUnregisterResource(exitRes));
     if (outRes)    cc(cudaGraphicsUnregisterResource(outRes));
-    if (volRes)    cc(cudaGraphicsUnregisterResource(volRes));
+//    if (volRes)    cc(cudaGraphicsUnregisterResource(volRes));
     if (tfFullRes) cc(cudaGraphicsUnregisterResource(tfFullRes));
     if (tfBackRes) cc(cudaGraphicsUnregisterResource(tfBackRes));
     QOpenGLFunctions f(QOpenGLContext::currentContext());
@@ -71,6 +71,32 @@ void VolRenRaycastCuda::resize(int w, int h)
     updateCUDAResources();
 }
 
+// TODO: SetVolumeCUDAed<BASE>
+void VolRenRaycastCuda::setVolume(const std::shared_ptr<IVolume> &volume)
+{
+    // check supported pixel type
+    static std::map<Volume::DataType, QOpenGLTexture::PixelType> dt2pt
+            = {{Volume::DT_Char, QOpenGLTexture::Int8},
+               {Volume::DT_Unsigned_Char, QOpenGLTexture::UInt8},
+               {Volume::DT_Float, QOpenGLTexture::Float32}};
+    if (0 == dt2pt.count(volume->pixelType()))
+    {
+        std::cout << "Unsupported pixel type..." << std::endl;
+        return;
+    }
+    // TODO: convert directly from Volume to VolumeCUDA without VolumeGL
+    // whether volume has the interface I need
+    std::shared_ptr<IVolumeCUDA> ptr = std::dynamic_pointer_cast<IVolumeCUDA>(volume);
+    if (!ptr)
+        ptr.reset(new VolumeGLCUDA(volume));
+    this->volume = ptr;
+    // set bounding box dimension
+    frustum.setVolumeDimension(
+        this->volume->w() * this->volume->sx(),
+        this->volume->h() * this->volume->sy(),
+        this->volume->d() * this->volume->sz());
+}
+
 void VolRenRaycastCuda::setTF(const mslib::TF &tf, bool preinteg, float stepsize, Filter filter)
 {
     BASE::setTF(tf, preinteg, stepsize, filter);
@@ -87,6 +113,9 @@ std::shared_ptr<ImageAbstract> VolRenRaycastCuda::output() const
 
 void VolRenRaycastCuda::raycast(const QMatrix4x4&, const QMatrix4x4& matView, const QMatrix4x4&)
 {
+    // TODO: getCUDAMappedArray();
+    cudaGraphicsResource_t volRes = this->volume->getCUDAResource();
+
     cc(cudaGraphicsMapResources(1, &entryRes, 0));
     cc(cudaGraphicsMapResources(1, &exitRes, 0));
     cc(cudaGraphicsMapResources(1, &outRes, 0));
@@ -111,7 +140,7 @@ void VolRenRaycastCuda::raycast(const QMatrix4x4&, const QMatrix4x4& matView, co
 
     updateCUDALights(matView);
 
-    cudacast(vol()->w(), vol()->h(), vol()->d(), volArr,
+    cudacast(this->volume->w(), this->volume->h(), this->volume->d(), volArr,
              tfInteg->getTexFull()->width(), tfInteg->getTexFull()->height(), stepsize, vr2cu[tfFilter], tfFullArr, tfBackArr,
              scalarMin, scalarMax,
              frustum.getTextureWidth(), frustum.getTextureHeight(), entryArr, exitArr, outPtr);
@@ -122,12 +151,6 @@ void VolRenRaycastCuda::raycast(const QMatrix4x4&, const QMatrix4x4& matView, co
     cc(cudaGraphicsUnmapResources(1, &entryRes, 0));
     cc(cudaGraphicsUnmapResources(1, &exitRes, 0));
     cc(cudaGraphicsUnmapResources(1, &outRes, 0));
-}
-
-void VolRenRaycastCuda::volumeChanged()
-{
-    if (volRes) cc(cudaGraphicsUnregisterResource(volRes));
-    cc(cudaGraphicsGLRegisterImage(&volRes, volume->getTexture()->textureId(), GL_TEXTURE_3D, cudaGraphicsRegisterFlagsReadOnly));
 }
 
 void VolRenRaycastCuda::updateCUDAResources()

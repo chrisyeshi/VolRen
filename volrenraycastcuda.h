@@ -3,12 +3,15 @@
 
 #include <volrenraycast.h>
 #include <tfintegrated.h>
+#include <volumeglcuda.h>
 #include <QtOpenGL>
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
 
 namespace yy {
 namespace volren {
+
+// template<class BASE> class IVolumeCUDA;
 
 class VolRenRaycastCuda : public TFIntegrated<VolRenRaycast>
 {
@@ -19,22 +22,23 @@ public:
 
     virtual void initializeGL();
     virtual void resize(int w, int h);
+    virtual void setVolume(const std::shared_ptr<IVolume> &volume);
     virtual void setTF(const mslib::TF& tf, bool preinteg, float stepsize, Filter filter);
     virtual std::shared_ptr<ImageAbstract> output() const;
 
 protected:
     virtual void raycast(const QMatrix4x4&, const QMatrix4x4& matView, const QMatrix4x4&);
-    virtual void volumeChanged();
+//    virtual void volumeChanged();
 
 private:
     void updateCUDAResources();
     void updateCUDALights(const QMatrix4x4& matView);
 
 protected:
+    std::shared_ptr<IVolumeCUDA> volume;
     GLuint outPBO;
     cudaGraphicsResource *entryRes, *exitRes, *outRes;
     int texWidth, texHeight;
-    cudaGraphicsResource *volRes;
     cudaGraphicsResource *tfFullRes, *tfBackRes;
 };
 

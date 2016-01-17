@@ -32,7 +32,7 @@ public:
     Method getMethod() const { return method; }
 	virtual void initializeGL() = 0;
 	virtual void resize(int w, int h) = 0;
-    virtual void setVolume(const std::weak_ptr<IVolume>& volume) = 0;
+    virtual void setVolume(const std::shared_ptr<IVolume>& volume) = 0;
     virtual void setTF(const mslib::TF& tf, bool preinteg, float stepsize, Filter filter) = 0;
     virtual void setScalarRange(float min, float max) { scalarMin = min; scalarMax = max; }
     virtual void setLights(const std::vector<Light>& lights) { this->lights = lights; }
@@ -72,7 +72,7 @@ public:
 
     virtual void initializeGL() {}
     virtual void resize(int w, int h) {}
-    virtual void setVolume(const std::weak_ptr<IVolume>& volume) {}
+    virtual void setVolume(const std::shared_ptr<IVolume>& volume) {}
     virtual void setTF(const mslib::TF& tf, bool preinteg, float stepsize, Filter filter) {}
     virtual void render(const QMatrix4x4& v, const QMatrix4x4& p) {}
     virtual std::shared_ptr<ImageAbstract> output() const { return std::make_shared<ImageNull>(); }
