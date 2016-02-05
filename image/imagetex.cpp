@@ -41,7 +41,7 @@ void ImageTex::draw()
 {
     if (!initialized)
         initialize();
-    glClear(GL_COLOR_BUFFER_BIT);
+//    glClear(GL_COLOR_BUFFER_BIT);
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, tex);
     painter.paint("tex", 0);

@@ -36,11 +36,11 @@ void VolRenRaycast::setVolume(const std::weak_ptr<IVolume> &volume)
     if (reinterpret_cast<void*>(this->volume.get()) == reinterpret_cast<void*>(volume.lock().get()))
         return;
     // check suppoted pixel type
-    static std::map<Volume::DataType, QOpenGLTexture::PixelType> dt2pt
-            = {{Volume::DT_Char, QOpenGLTexture::Int8},
-               {Volume::DT_Unsigned_Char, QOpenGLTexture::UInt8},
-               {Volume::DT_Float, QOpenGLTexture::Float32}};
-    if (0 == dt2pt.count(volume.lock()->pixelType()))
+    static std::map<Volume::ScalarType, QOpenGLTexture::PixelType> dt2pt
+            = {{Volume::ST_Char, QOpenGLTexture::Int8},
+               {Volume::ST_Unsigned_Char, QOpenGLTexture::UInt8},
+               {Volume::ST_Float, QOpenGLTexture::Float32}};
+    if (0 == dt2pt.count(volume.lock()->scalarType()))
     {
         std::cout << "Unsupported pixel type..." << std::endl;
         return;

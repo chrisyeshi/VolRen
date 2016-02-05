@@ -18,6 +18,7 @@ public:
     void initializeGL();
     // setResolution changes the texture pointers
     void setResolution(int w, int h);
+    void setRayEarlyExit(std::shared_ptr<GLuint> texExt);
     int getTextureWidth() const { return texWidth; }
     int getTextureHeight() const { return texHeight; }
     void setVolumeDimension(int w, int h, int d);
@@ -39,8 +40,9 @@ private:
     std::shared_ptr<GLuint> entryFBO, exitFBO;
     std::shared_ptr<GLuint> entryTex, exitTex;
     std::shared_ptr<GLuint> entryRen, exitRen;
+    std::shared_ptr<GLuint> earlyExitTex;
     Shape plane;
-    Painter pNear, pFar;
+    Painter pNear, pFar, pEarly;
     int texWidth, texHeight;
     int volWidth, volHeight, volDepth;
 

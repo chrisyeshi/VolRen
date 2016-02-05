@@ -30,6 +30,7 @@ void RaycastFurstum::initializeGL()
     // initialize near and far painter
     pNear.initializeGL(plane, ":/volren/shaders/raycastplane.vert", ":/volren/shaders/raycastplane.frag");
     pFar.initializeGL(plane, ":/volren/shaders/raycastplane.vert", ":/volren/shaders/raycastplane.frag");
+    pEarly.initializeGL(":/volren/shaders/quad.vert", ":/volren/shaders/quad.frag");
 }
 
 void RaycastFurstum::setResolution(int w, int h)
@@ -37,6 +38,11 @@ void RaycastFurstum::setResolution(int w, int h)
     texWidth = w;
     texHeight = h;
     newFBOs();
+}
+
+void RaycastFurstum::setRayEarlyExit(std::shared_ptr<GLuint> texExt)
+{
+    earlyExitTex = texExt;
 }
 
 void RaycastFurstum::setVolumeDimension(int w, int h, int d)
@@ -107,8 +113,19 @@ std::shared_ptr<GLuint> RaycastFurstum::exitTexture(const QMatrix4x4 &v, const Q
     f.glGetIntegerv(GL_VIEWPORT, viewport);
     f.glViewport(0, 0, texWidth, texHeight);
     f.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     pFar.paint("volDim", QVector3D(volWidth, volHeight, volDepth));
     cube.render(p * v, GL_FRONT);
+
+    if (earlyExitTex)
+    {
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        glBindTexture(GL_TEXTURE_2D, *earlyExitTex);
+        pEarly.paint("tex", 0);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glDisable(GL_BLEND);
+    }
 
 //    std::unique_ptr<GLubyte[]> pixels(new GLubyte [texWidth * texHeight * 3]);
 //    f.glReadPixels(0, 0, texWidth, texHeight, GL_RGB, GL_UNSIGNED_BYTE, pixels.get());

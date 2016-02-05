@@ -78,7 +78,8 @@ void main(void)
     vec3 dir = normalize(exit - entry);
     float baseSample = 0.01;
     float maxLength = length(exit - entry);
-    int totalSteps = int(maxLength / stepSize);
+    maxLength = min(maxLength, 2.0);
+    //int totalSteps = int(maxLength / stepSize);
     vec2 scalar = vec2(0.0, 0.0); // a segment of the ray, X as the scalar value at the end of the segment, and Y as the scalar value at the beginning of the segment.
     scalar.y = texture(texVolume, entry).r;
     scalar.y = clamp((scalar.y - scalarMin) / (scalarMax - scalarMin), 0.0, 1.0);
@@ -97,10 +98,14 @@ void main(void)
         lfCurr = getLightFactor(makeGradient(spotCurr), dir);
         acc += (colorBack * lfCurr + colorFront * lfPrev) * (1.0 - acc.a);
         if (acc.a > 0.999)
+        {
+            acc.a = 1.0;
             break;
+        }
         scalar.y = scalar.x;
         lfPrev = lfCurr;
     }
     o_color = acc;
+//    o_color = vec4(entry, 1.0);
 }
 
