@@ -23,12 +23,8 @@ public:
 
     virtual void initializeGL();
     virtual void resize(int w, int h);
-    // virtual void setVolume(const std::shared_ptr<IVolume> &volume);
     virtual void render(const QMatrix4x4& v, const QMatrix4x4& p);
     virtual std::shared_ptr<ImageAbstract> output() const = 0;
-
-    virtual void setParaSheet(const Json::Value &json);
-    virtual Json::Value getParaSheet() const;
 
 protected:
     virtual void raycast(const QMatrix4x4& m, const QMatrix4x4& v, const QMatrix4x4& p) = 0;

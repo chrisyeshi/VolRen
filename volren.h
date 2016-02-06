@@ -7,7 +7,6 @@
 #include <memory>
 #include <map>
 #include <functional>
-#include <json/json.h>
 #include <TF.h>
 #include <imageabstract.h>
 #include "light.h"
@@ -38,9 +37,6 @@ public:
     virtual void setLights(const std::vector<Light>& lights) { this->lights = lights; }
     virtual void render(const QMatrix4x4& v, const QMatrix4x4& p) = 0;
     virtual std::shared_ptr<ImageAbstract> output() const = 0;
-
-    virtual void setParaSheet(const Json::Value& json);
-    virtual Json::Value getParaSheet() const;
 
 protected:
     float scalarMin, scalarMax;
