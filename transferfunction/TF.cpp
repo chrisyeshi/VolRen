@@ -9,6 +9,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <cassert>
 
 #include "TF.h"
 
@@ -45,7 +46,12 @@ TF::TF(int resolution, int arraySize)
       _colorMap(nullptr),
       _arraySize(arraySize),
       _alphaArray(nullptr),
-      _blendMode(0)
+      _blendMode(0),
+      _isUpdatedGL(false),
+      _stepsize(0.01f),
+      _filter(Filter_Linear),
+      _cudaResFull(nullptr),
+      _cudaResBack(nullptr)
 {
     _backgroundColor[0] = 0.0f;
     _backgroundColor[1] = 0.0f;
@@ -76,7 +82,12 @@ TF::TF(const TF &other)
       _colorMap(nullptr),
       _arraySize(0),
       _alphaArray(nullptr),
-      _blendMode(0)
+      _blendMode(0),
+      _isUpdatedGL(false),
+      _stepsize(0.01f),
+      _filter(Filter_Linear),
+      _cudaResFull(nullptr),
+      _cudaResBack(nullptr)
 {
     *this = other;
 }
@@ -104,7 +115,27 @@ TF &TF::operator = (const TF &other)
     _backgroundColor[3] = other._backgroundColor[3];
     _colorControls = other._colorControls;
     _gaussianObjects = other._gaussianObjects;
+    _stepsize = other._stepsize;
+    _filter = other._filter;
     return *this;
+}
+
+void TF::setResolution(int resolution)
+{
+    assert(resolution > 0);
+    if (_colorMap != nullptr) delete [] _colorMap;
+    if (_alphaArray != nullptr) delete [] _alphaArray;
+
+    _resolution = resolution;
+    _colorMap = new float[_resolution * 4];      // rgba
+    _arraySize = resolution;
+    _alphaArray = new float[_arraySize]();       // alpha
+
+    // initial draw array
+    for (int i = 0; i < _arraySize; i++)
+        _alphaArray[i] = 0.5f;
+
+    updateColorMap();
 }
 
 void TF::clear()
@@ -121,6 +152,18 @@ void TF::clear()
     _backgroundColor[3] = 1.0f;
     _colorControls.clear();
     _gaussianObjects.clear();
+    _isUpdatedGL = false;
+    _tfInteg.reset();
+    if (_cudaResFull)
+    {
+        cudaGraphicsUnregisterResource(_cudaResFull);
+        _cudaResFull = nullptr;
+    }
+    if (_cudaResBack)
+    {
+        cudaGraphicsUnregisterResource(_cudaResBack);
+        _cudaResBack = nullptr;
+    }
 }
 
 void TF::setBackgroundColor(float r, float g, float b)
@@ -267,6 +310,7 @@ void TF::updateColorMap()
             if (_colorMap[i * 4 + 3] < _gaussianObjects[j].alphaArray[i])       // maximum
                 _colorMap[i * 4 + 3] = _gaussianObjects[j].alphaArray[i];
     }
+    _isUpdatedGL = false;
 }
 
 // static
@@ -294,6 +338,76 @@ TF TF::fromRainbowMap(int resolution, int arraySize)
 
     ret.updateColorMap();
     return ret;
+}
+
+void TF::setPreIntegrate(bool preinteg)
+{
+    if (!_tfInteg)
+        _tfInteg = std::make_shared<yy::volren::TFIntegrater>(preinteg);
+    if (_tfInteg->isPreinteg() == preinteg)
+        return;
+    _tfInteg->convertTo(preinteg);
+    _isUpdatedGL = false;
+}
+
+const std::vector<yy::volren::Rgba>& TF::buffer() const
+{
+    // TODO: stop copying memory... Orz
+    static std::vector<yy::volren::Rgba> ret;
+    ret.resize(resolution());
+    memcpy(reinterpret_cast<char*>(ret.data()), reinterpret_cast<char*>(_colorMap), resolution() * yy::volren::Rgba::nFloats());
+    return ret;
+}
+
+bool TF::preintegrate() const
+{
+    if (!_tfInteg || !_isUpdatedGL)
+        tfIntegrate();
+    return _tfInteg->isPreinteg();
+}
+
+QSharedPointer<QOpenGLTexture> TF::texFull() const
+{
+    if (!_tfInteg || !_isUpdatedGL)
+        tfIntegrate();
+    return _tfInteg->getTexFull();
+}
+
+QSharedPointer<QOpenGLTexture> TF::texBack() const
+{
+    if (!_tfInteg || !_isUpdatedGL)
+        tfIntegrate();
+    return _tfInteg->getTexBack();
+}
+
+cudaGraphicsResource* TF::cudaResFull() const
+{
+    if (!_cudaResFull || !_isUpdatedGL)
+        cudaGraphicsGLRegisterImage(&_cudaResFull, texFull()->textureId(), GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly);
+    return _cudaResFull;
+}
+
+cudaGraphicsResource* TF::cudaResBack() const
+{
+    if (!_cudaResBack || !_isUpdatedGL)
+        cudaGraphicsGLRegisterImage(&_cudaResBack, texBack()->textureId(), GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly);
+    return _cudaResBack;
+}
+
+void TF::tfIntegrate() const
+{
+    if (!_tfInteg)
+        _tfInteg = std::make_shared<yy::volren::TFIntegrater>();
+    _tfInteg->integrate(_colorMap, _resolution, _stepsize);
+    static std::map<Filter, QOpenGLTexture::Filter> vr2qt
+                = { { Filter_Linear, QOpenGLTexture::Linear }
+                  , { Filter_Nearest, QOpenGLTexture::Nearest } };
+    assert(vr2qt.count(_filter) > 0);
+    _tfInteg->getTexFull()->setMinMagFilters(vr2qt[_filter], vr2qt[_filter]);
+    _tfInteg->getTexFull()->setWrapMode(QOpenGLTexture::ClampToEdge);
+    _tfInteg->getTexBack()->setMinMagFilters(vr2qt[_filter], vr2qt[_filter]);
+    _tfInteg->getTexBack()->setWrapMode(QOpenGLTexture::ClampToEdge);
+    _isUpdatedGL = true;
 }
 
 namespace {

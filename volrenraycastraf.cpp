@@ -40,7 +40,7 @@ VolRenRaycastRAF::VolRenRaycastRAF()
  , texWidth(frustum.getTextureWidth()), texHeight(frustum.getTextureHeight())
  , layers(defaultLayers)
  , preintegrate(true)
- , tfFilter(Filter_Linear)
+ , tfFilter(IColormap::Filter_Linear)
  , stepsize(0.01f)
 {
 
@@ -63,7 +63,7 @@ void VolRenRaycastRAF::initializeGL()
 {
     VolRenRaycast::initializeGL();
     newFBOs(frustum.getTextureWidth(), frustum.getTextureHeight());
-    setTF(mslib::TF(), false, stepsize, tfFilter);
+    // setTF(mslib::TF(), false, stepsize, tfFilter);
 }
 
 void VolRenRaycastRAF::resize(int w, int h)
@@ -97,39 +97,38 @@ void VolRenRaycastRAF::setVolume(const std::shared_ptr<IVolume>& volume)
         this->volume->d() * this->volume->sz());
 }
 
-void VolRenRaycastRAF::setTF(const mslib::TF &tf, bool preinteg, float stepsize, Filter filter)
+void VolRenRaycastRAF::setColormap(const std::shared_ptr<IColormap>& colormap)
 {
-    // transfer function texture
-    this->stepsize = stepsize;
-    this->preintegrate = preinteg;
-    this->tfFilter = filter;
-    if (tfTex.isNull() || tfTex->width() != tf.resolution() || tfTex->height() != 1)
+    this->stepsize = colormap->stepsize();
+    this->preintegrate = colormap->preintegrate();
+    this->tfFilter = colormap->filter();
+    if (tfTex.isNull() || tfTex->width() != colormap->resolution() || tfTex->height() != 1)
     {
         tfTex.reset(new QOpenGLTexture(QOpenGLTexture::Target1D));
         tfTex->setFormat(QOpenGLTexture::RGBA32F);
-        tfTex->setSize(tf.resolution());
+        tfTex->setSize(colormap->resolution());
         tfTex->allocateStorage();
         tfTex->setWrapMode(QOpenGLTexture::ClampToEdge);
     }
-    static std::map<Filter, QOpenGLTexture::Filter> vr2qt
-            = { { Filter_Linear, QOpenGLTexture::Linear }
-              , { Filter_Nearest, QOpenGLTexture::Nearest } };
-    assert(vr2qt.count(filter) > 0);
-    tfTex->setMinMagFilters(vr2qt[filter], vr2qt[filter]);
-    tfTex->setData(QOpenGLTexture::RGBA, QOpenGLTexture::Float32, tf.colorMap());
+    static std::map<IColormap::Filter, QOpenGLTexture::Filter> vr2qt
+        = { { IColormap::Filter_Linear, QOpenGLTexture::Linear }
+          , { IColormap::Filter_Nearest, QOpenGLTexture::Nearest } };
+          assert(vr2qt.count(tfFilter) > 0);
+    tfTex->setMinMagFilters(vr2qt[tfFilter], vr2qt[tfFilter]);
+    tfTex->setData(QOpenGLTexture::RGBA, QOpenGLTexture::Float32, reinterpret_cast<const float*>(colormap->buffer().data()));
     // unable to register image with 1D texture
     // creating cudaArray manually
     cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc(32, 32, 32, 32, cudaChannelFormatKindFloat);
     tfArr.reset([&](){
         cudaArray* arr;
-        cc(cudaMallocArray(&arr, &channelDesc, tf.resolution()));
-        cc(cudaMemcpyToArray(arr, 0, 0, tf.colorMap(), 4 * tf.resolution() * sizeof(float), cudaMemcpyHostToDevice));
+        cc(cudaMallocArray(&arr, &channelDesc, colormap->resolution()));
+        cc(cudaMemcpyToArray(arr, 0, 0, reinterpret_cast<const float*>(colormap->buffer().data()), 4 * colormap->resolution() * sizeof(float), cudaMemcpyHostToDevice));
         return arr;
     }(), [](cudaArray* arr){
         cc(cudaFreeArray(arr));
     });
     // define number of layers for RAF
-    int newLayers = std::min(tf.resolution(), int(maxLayers));
+    int newLayers = std::min(colormap->resolution(), int(maxLayers));
     if (layers != newLayers)
     {
         layers = 8;
@@ -184,9 +183,9 @@ void VolRenRaycastRAF::raycast(const QMatrix4x4& m, const QMatrix4x4& v, const Q
     float near = b / (a - 1);
     float far = b / (a + 1);
     // transfer function filter mode
-    static std::map<Filter, cudaTextureFilterMode> vr2cu
-            = { { Filter_Linear, cudaFilterModeLinear }
-              , { Filter_Nearest, cudaFilterModePoint } };
+    static std::map<IColormap::Filter, cudaTextureFilterMode> vr2cu
+            = { { IColormap::Filter_Linear, cudaFilterModeLinear }
+              , { IColormap::Filter_Nearest, cudaFilterModePoint } };
     assert(vr2cu.count(tfFilter) > 0);
     // default binDivs
     std::vector<float> binDivs(layers + 1);

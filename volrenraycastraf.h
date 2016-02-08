@@ -5,6 +5,7 @@
 #include <QtOpenGL>
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
+#include <colormap.h>
 #include "TF.h"
 
 namespace yy {
@@ -23,7 +24,7 @@ public:
     virtual void initializeGL();
     virtual void resize(int w, int h);
     virtual void setVolume(const std::shared_ptr<IVolume>& volume);
-    virtual void setTF(const mslib::TF &tf, bool preinteg, float stepsize, Filter filter);
+    virtual void setColormap(const std::shared_ptr<IColormap>& colormap);
     virtual std::shared_ptr<ImageAbstract> output() const;
 
 protected:
@@ -39,7 +40,7 @@ protected:
     std::shared_ptr<cudaArray> tfArr;
     int texWidth, texHeight, layers;
     bool preintegrate;
-    Filter tfFilter;
+    IColormap::Filter tfFilter;
     float stepsize;
     QSharedPointer<QOpenGLTexture> tfTex;
 

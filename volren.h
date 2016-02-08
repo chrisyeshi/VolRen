@@ -32,7 +32,7 @@ public:
 	virtual void initializeGL() = 0;
 	virtual void resize(int w, int h) = 0;
     virtual void setVolume(const std::shared_ptr<IVolume>& volume) = 0;
-    virtual void setTF(const mslib::TF& tf, bool preinteg, float stepsize, Filter filter) = 0;
+    virtual void setColormap(const std::shared_ptr<IColormap>& colormap) = 0;
     virtual void setScalarRange(float min, float max) { scalarMin = min; scalarMax = max; }
     virtual void setLights(const std::vector<Light>& lights) { this->lights = lights; }
     virtual void render(const QMatrix4x4& v, const QMatrix4x4& p) = 0;
@@ -69,7 +69,7 @@ public:
     virtual void initializeGL() {}
     virtual void resize(int w, int h) {}
     virtual void setVolume(const std::shared_ptr<IVolume>& volume) {}
-    virtual void setTF(const mslib::TF& tf, bool preinteg, float stepsize, Filter filter) {}
+    virtual void setColormap(const std::shared_ptr<IColormap>& colormap) {}
     virtual void render(const QMatrix4x4& v, const QMatrix4x4& p) {}
     virtual std::shared_ptr<ImageAbstract> output() const { return std::make_shared<ImageNull>(); }
 };

@@ -6,8 +6,12 @@
 #ifndef TF_H
 #define TF_H
 
+#include <colormap.h>
+#include <tfintegrater.h>
 #include <cmath>
 #include <vector>
+#include <cuda_runtime.h>
+#include <cuda_gl_interop.h>
 
 #ifndef nullptr
 #define nullptr 0
@@ -85,7 +89,7 @@ inline void TFGaussianObject::update()
 // arraySize : internal array size of the hand-drawn alpha array
 // resolution : sampling resolution of the output RGBA color map
 //
-class TF
+class TF : public virtual yy::volren::IColormapGL, public virtual yy::volren::IColormapCUDA
 {
 public:
     TF(int resolution = 1024, int arraySize = 1024);
@@ -94,6 +98,7 @@ public:
 
     TF &operator = (const TF &other);       // deep copy
 
+    void setResolution(int resolution);
     void clear();
     void setAlpha(unsigned int index, float alpha) { if (index < _arraySize) _alphaArray[index] = alpha; }
 
@@ -128,6 +133,19 @@ public:
 
     static TF fromRainbowMap(int resolution = 1024, int arraySize = 1024);
 
+public:
+    void setPreIntegrate(bool preinteg);
+    void setStepsize(float stepsize) { _stepsize = stepsize; _isUpdatedGL = false; }
+    void setFilter(yy::volren::IColormap::Filter filter) { _filter = filter; _isUpdatedGL = false; }
+    virtual const std::vector<yy::volren::Rgba>& buffer() const;
+    virtual float stepsize() const { return _stepsize; }
+    virtual bool preintegrate() const;
+    virtual yy::volren::IColormap::Filter filter() const { return _filter; }
+    virtual QSharedPointer<QOpenGLTexture> texFull() const;
+    virtual QSharedPointer<QOpenGLTexture> texBack() const;
+    virtual cudaGraphicsResource* cudaResFull() const;
+    virtual cudaGraphicsResource* cudaResBack() const;
+
 private:
     int     _resolution;                            // sampling resolution of color map
     float * _colorMap;                              // rgba
@@ -137,6 +155,15 @@ private:
     int     _blendMode;
     std::vector<TFColorControl> _colorControls;     // color control points
     std::vector<TFGaussianObject> _gaussianObjects;
+    mutable bool _isUpdatedGL;
+    float _stepsize;
+    yy::volren::IColormap::Filter _filter;
+    mutable std::shared_ptr<yy::volren::TFIntegrater> _tfInteg;
+    mutable cudaGraphicsResource* _cudaResFull;
+    mutable cudaGraphicsResource* _cudaResBack;
+
+private:
+    void tfIntegrate() const;
 };
 
 } // namespace mslib

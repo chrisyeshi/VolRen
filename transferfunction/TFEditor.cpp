@@ -238,12 +238,7 @@ void TFEditor::setTF(const TF &tf)
 
 void TFEditor::setResolution(int resolution)
 {
-    if (_tf)
-    {
-        delete _tf;
-        _tf = NULL;
-    }
-    _tf = new TF(resolution, resolution);
+    _tf->setResolution(resolution);
     updateTF(true, true);
     emitTFChanged(true);
 }
