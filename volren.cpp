@@ -10,11 +10,11 @@
 namespace yy {
 namespace volren {
 
-static std::map<Method, std::string> method2string
-        = { { Method_Raycast_CUDA, "Method_Raycast_CUDA" },
-            { Method_Raycast_GL,   "Method_Raycast_GL" },
-            { Method_Raycast_RAF,  "Method_Raycast_RAF" },
-            { Method_Unknown,      "Method_Unknown" } };
+std::map<Method, std::string> VolRen::method2string
+  = { { Method_Raycast_CUDA, "Method_Raycast_CUDA" },
+      { Method_Raycast_GL,   "Method_Raycast_GL" },
+      { Method_Raycast_RAF,  "Method_Raycast_RAF" },
+      { Method_Unknown,      "Method_Unknown" } };
 
 // TODO: automatic registration. C++ doesn't support static initialization in a static library (lame)
 std::map<Method, VolRenFactory::CreateFunc> VolRenFactory::creators

@@ -25,9 +25,13 @@ enum Filter { Filter_Linear, Filter_Nearest };
 class VolRen
 {
 public:
+    static std::map<Method, std::string> method2string;
+
+public:
     VolRen(const Method& method) : scalarMin(0.f), scalarMax(1.f), method(method) {}
     virtual ~VolRen() {}
 
+public:
     Method getMethod() const { return method; }
 	virtual void initializeGL() = 0;
 	virtual void resize(int w, int h) = 0;
