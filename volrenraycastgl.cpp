@@ -10,7 +10,7 @@
 namespace yy {
 namespace volren {
 
-#define BASE TFIntegrated<VolRenRaycast>
+#define BASE VolRenRaycast
 
 VolRenRaycastGL::VolRenRaycastGL()
  : BASE(Method_Raycast_GL)
@@ -33,6 +33,7 @@ void VolRenRaycastGL::initializeGL()
     // TODO: VolRenRaycast to TFIntegrated<VolRenRaycast> in VolRenRaycastCuda
     BASE::initializeGL();
     painter.initializeGL(":/volren/shaders/raycast.vert", ":/volren/shaders/raycast.frag");
+    if (!colormap) colormap.reset(new ColormapGL());
     newFBOs();
 }
 
@@ -64,6 +65,16 @@ void VolRenRaycastGL::setVolume(const std::shared_ptr<IVolume> &volume)
         this->volume->w() * this->volume->sx(),
         this->volume->h() * this->volume->sy(),
         this->volume->d() * this->volume->sz());
+}
+
+void VolRenRaycastGL::setColormap(const std::shared_ptr<IColormap>& colormap)
+{
+    if (this->colormap == colormap)
+        return;
+    std::shared_ptr<IColormapGL> ptr = std::dynamic_pointer_cast<IColormapGL>(colormap);
+    if (!ptr)
+        ptr = std::make_shared<ColormapGL>(colormap);
+    this->colormap = ptr;
 }
 
 std::shared_ptr<ImageAbstract> VolRenRaycastGL::output() const
@@ -146,9 +157,9 @@ void VolRenRaycastGL::raycast(const QMatrix4x4&, const QMatrix4x4& matView, cons
     f.glActiveTexture(GL_TEXTURE2);
     f.glBindTexture(GL_TEXTURE_3D, volume->getTexture()->textureId());
     f.glActiveTexture(GL_TEXTURE3);
-    f.glBindTexture(GL_TEXTURE_2D, tfInteg->getTexFull()->textureId());
+    f.glBindTexture(GL_TEXTURE_2D, colormap->texFull()->textureId());
     f.glActiveTexture(GL_TEXTURE4);
-    f.glBindTexture(GL_TEXTURE_2D, tfInteg->getTexBack()->textureId());
+    f.glBindTexture(GL_TEXTURE_2D, colormap->texBack()->textureId());
 
     for (unsigned int i = 0; i < lights.size(); ++i)
     {
@@ -167,7 +178,7 @@ void VolRenRaycastGL::raycast(const QMatrix4x4&, const QMatrix4x4& matView, cons
                   "texTFFull", 3,
                   "texTFBack", 4,
                   "volSize", QVector3D(volume->w(), volume->h(), volume->d()),
-                  "stepSize", stepsize,
+                  "stepSize", colormap->stepsize(),
                   "scalarMin", scalarMin,
                   "scalarMax", scalarMax,
                   "nLights", int(lights.size()));

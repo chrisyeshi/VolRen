@@ -20,7 +20,7 @@ class IVolumeGL;
 
 namespace volren {
 
-class VolRenRaycastGL : public TFIntegrated<VolRenRaycast>
+class VolRenRaycastGL : public VolRenRaycast
 {
 public:
     VolRenRaycastGL();
@@ -30,6 +30,7 @@ public:
     virtual void initializeGL();
     virtual void resize(int w, int h);
     virtual void setVolume(const std::shared_ptr<IVolume> &volume);
+    virtual void setColormap(const std::shared_ptr<IColormap> &colormap);
     virtual std::shared_ptr<ImageAbstract> output() const;
 
 protected:
@@ -43,6 +44,7 @@ protected:
     Painter painter;
     std::shared_ptr<GLuint> outFBO, outTex, outRen;
     std::shared_ptr<IVolumeGL> volume;
+    std::shared_ptr<IColormapGL> colormap;
 };
 
 } // namespace volren

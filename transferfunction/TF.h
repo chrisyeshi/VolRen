@@ -6,8 +6,16 @@
 #ifndef TF_H
 #define TF_H
 
+#include <colormap.h>
+#include <tfintegrater.h>
 #include <cmath>
 #include <vector>
+#include <memory>
+
+#ifdef ENABLE_CUDA
+    #include <cuda_runtime.h>
+    #include <cuda_gl_interop.h>
+#endif // ENABLE_CUDA
 
 #ifndef nullptr
 #define nullptr 0
@@ -86,38 +94,40 @@ inline void TFGaussianObject::update()
 // resolution : sampling resolution of the output RGBA color map
 //
 class TF
+  : public virtual yy::volren::IColormapGL
+#ifdef ENABLE_CUDA
+  , public virtual yy::volren::IColormapCUDA
+#endif // ENABLE_CUDA
 {
 public:
-    TF(int resolution = 1024, int arraySize = 1024);
+    TF(int resolution = 1024);
     TF(const TF &other);
     ~TF();
 
     TF &operator = (const TF &other);       // deep copy
 
     void clear();
-    void setAlpha(unsigned int index, float alpha) { if (index < _arraySize) _alphaArray[index] = alpha; }
+    void setResolution(int resolution);
 
-    int resolution() const               { return _resolution; }
-    float *colorMap()                    { return _colorMap; }
-    const float *colorMap() const        { return _colorMap; }
-    int arraySize() const                { return _arraySize; }
-    float *alphaArray()                  { return _alphaArray; }
-    const float *backgroundColor() const { return _backgroundColor; }
+    const std::vector<float>& alphaArray() const { return _alphaArray; }
+    void setAlpha(unsigned int index, float alpha) { if (index < _alphaArray.size()) _alphaArray[index] = alpha; }
+
+    yy::volren::Rgba backgroundColor() const { return _backgroundColor; }
     void setBackgroundColor(float r, float g, float b);
 
-    int                   colorControlCount() const     { return (int)_colorControls.size(); }
-    TFColorControl       &colorControl(int index)       { return _colorControls[index]; }
+    int colorControlCount() const { return (int)_colorControls.size(); }
+    TFColorControl &colorControl(int index) { return _colorControls[index]; }
     const TFColorControl &colorControl(int index) const { return _colorControls[index]; }
-    void                  addColorControl(const TFColorControl &control);
-    void                  removeColorControl(int index);
-    TFColorControl       &insertColorControl(float value);
-    void                  clearColorControls() { _colorControls.clear(); }
+    void addColorControl(const TFColorControl &control);
+    void removeColorControl(int index);
+    TFColorControl& insertColorControl(float value);
+    void clearColorControls() { _colorControls.clear(); }
     
-    int                     gaussianObjectCount() const     { return (int)_gaussianObjects.size(); }
-    TFGaussianObject       &gaussianObject(int index)       { return _gaussianObjects[index]; }
+    int gaussianObjectCount() const { return (int)_gaussianObjects.size(); }
+    TFGaussianObject &gaussianObject(int index) { return _gaussianObjects[index]; }
     const TFGaussianObject &gaussianObject(int index) const { return _gaussianObjects[index]; }
-    void                    addGaussianObject(float mean, float sigma, float heightFactor);
-    void                    removeGaussianObject(int index);
+    void addGaussianObject(float mean, float sigma, float heightFactor);
+    void removeGaussianObject(int index);
 
     void updateColorMap();
 
@@ -126,17 +136,42 @@ public:
     bool load(const char *fileName) { return read(fileName); }      // = read()
     bool save(const char *fileName) { return write(fileName); }     // = write()
 
-    static TF fromRainbowMap(int resolution = 1024, int arraySize = 1024);
+    static TF fromRainbowMap(int resolution = 1024);
+
+// Interface from IColormap
+public:
+    void setPreIntegrate(bool preinteg);
+    void setStepsize(float stepsize) { _stepsize = stepsize; _isUpdatedGL = false; }
+    void setFilter(yy::volren::IColormap::Filter filter) { _filter = filter; _isUpdatedGL = false; }
+    virtual const std::vector<yy::volren::Rgba>& buffer() const;
+    virtual float stepsize() const { return _stepsize; }
+    virtual bool preintegrate() const;
+    virtual yy::volren::IColormap::Filter filter() const { return _filter; }
+    virtual QSharedPointer<QOpenGLTexture> texFull() const;
+    virtual QSharedPointer<QOpenGLTexture> texBack() const;
+#ifdef ENABLE_CUDA
+    virtual cudaGraphicsResource* cudaResFull() const;
+    virtual cudaGraphicsResource* cudaResBack() const;
+#endif // ENABLE_CUDA
 
 private:
-    int     _resolution;                            // sampling resolution of color map
-    float * _colorMap;                              // rgba
-    int     _arraySize;                             // size of alpha array, can be different from resolution
-    float * _alphaArray;                            // alpha
-    float   _backgroundColor[4];
-    int     _blendMode;
+    void tfIntegrate() const;
+
+private:
+    std::vector<yy::volren::Rgba> _colorMap;
+    std::vector<float> _alphaArray;
+    yy::volren::Rgba _backgroundColor;
+    int _blendMode;
     std::vector<TFColorControl> _colorControls;     // color control points
     std::vector<TFGaussianObject> _gaussianObjects;
+    float _stepsize;
+    yy::volren::IColormap::Filter _filter;
+    mutable bool _isUpdatedGL;
+    mutable std::shared_ptr<yy::volren::TFIntegrater> _tfInteg;
+#ifdef ENABLE_CUDA
+    mutable cudaGraphicsResource* _cudaResFull;
+    mutable cudaGraphicsResource* _cudaResBack;
+#endif // ENABLE_CUDA
 };
 
 } // namespace mslib

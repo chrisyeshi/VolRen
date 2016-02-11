@@ -1,6 +1,7 @@
 #include "tfinteg2dgl.h"
 #include <iostream>
 #include <cassert>
+#include <memory>
 #include <QOpenGLTexture>
 #include <QOpenGLFunctions>
 #include <QOpenGLFunctions_3_3_Core>
@@ -24,6 +25,9 @@ void TFInteg2DGL::integrate(const float *colormap, int resolution, float stepsiz
         newResources(resolution);
     QOpenGLFunctions* f = QOpenGLContext::currentContext()->functions();
     tex1d->setData(QOpenGLTexture::RGBA, QOpenGLTexture::Float32, colormap);
+    // framebuffer object
+    GLint oFbo;
+    f->glGetIntegerv(GL_FRAMEBUFFER_BINDING, &oFbo);
     f->glBindFramebuffer(GL_FRAMEBUFFER, *fbo);
     f->glClear(GL_COLOR_BUFFER_BIT);
     // viewport
@@ -31,13 +35,25 @@ void TFInteg2DGL::integrate(const float *colormap, int resolution, float stepsiz
     f->glGetIntegerv(GL_VIEWPORT, viewport);
     f->glViewport(0, 0, resolution, resolution);
     // 1d texture
-    tex1d->bind();
+    GLint activeTex;
+    f->glGetIntegerv(GL_ACTIVE_TEXTURE, &activeTex);
+    tex1d->bind(0, QOpenGLTexture::ResetTextureUnit);
     // paint
     painter.paint("tf1d", 0, "resolution", resolution, "segLen", stepsize);
     // clean
-    tex1d->release();
+    tex1d->release(0, QOpenGLTexture::ResetTextureUnit);
+    f->glActiveTexture(activeTex);
+
+//    std::unique_ptr<GLubyte[]> pixels(new GLubyte [resolution * resolution * 4]);
+//    f->glReadPixels(0, 0, resolution, resolution, GL_RGBA, GL_UNSIGNED_BYTE, pixels.get());
+//    QImage image(pixels.get(), resolution, resolution, QImage::Format_RGBA8888);
+//    static QLabel label;
+//    label.resize(resolution, resolution);
+//    label.setPixmap(QPixmap::fromImage(image.mirrored()));
+//    label.show();
+
     f->glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-    f->glBindFramebuffer(GL_FRAMEBUFFER, QOpenGLContext::currentContext()->defaultFramebufferObject());
+    f->glBindFramebuffer(GL_FRAMEBUFFER, oFbo);
 }
 
 void TFInteg2DGL::newResources(int resolution)
@@ -75,12 +91,14 @@ void TFInteg2DGL::newResources(int resolution)
     }(), [](GLuint* fboPtr){
         QOpenGLContext::currentContext()->functions()->glDeleteFramebuffers(1, fboPtr);
     });
+    GLint oFbo;
+    f->glGetIntegerv(GL_FRAMEBUFFER_BINDING, &oFbo);
     f->glBindFramebuffer(GL_FRAMEBUFFER, *fbo);
     f->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texFull->textureId(), 0);
     f->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, texBack->textureId(), 0);
     GLenum bufs[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
     f->glDrawBuffers(2, bufs);
-    f->glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    f->glBindFramebuffer(GL_FRAMEBUFFER, oFbo);
     GLenum status;
     status = f->glCheckFramebufferStatus(GL_FRAMEBUFFER);
     switch (status)

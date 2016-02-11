@@ -29,7 +29,7 @@ static void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
 namespace yy {
 namespace volren {
 
-#define BASE TFIntegrated<VolRenRaycast>
+#define BASE VolRenRaycast
 
 VolRenRaycastCuda::VolRenRaycastCuda()
  : BASE(Method_Raycast_CUDA)
@@ -37,7 +37,7 @@ VolRenRaycastCuda::VolRenRaycastCuda()
  , entryRes(NULL), exitRes(NULL), outRes(NULL)
  , texWidth(frustum.getTextureWidth()), texHeight(frustum.getTextureHeight())
 // , volRes(0)
- , tfFullRes(0), tfBackRes(0)
+ // , tfFullRes(0), tfBackRes(0)
 {
 
 }
@@ -52,9 +52,9 @@ VolRenRaycastCuda::~VolRenRaycastCuda()
     if (entryRes)  cc(cudaGraphicsUnregisterResource(entryRes));
     if (exitRes)   cc(cudaGraphicsUnregisterResource(exitRes));
     if (outRes)    cc(cudaGraphicsUnregisterResource(outRes));
-//    if (volRes)    cc(cudaGraphicsUnregisterResource(volRes));
-    if (tfFullRes) cc(cudaGraphicsUnregisterResource(tfFullRes));
-    if (tfBackRes) cc(cudaGraphicsUnregisterResource(tfBackRes));
+    // if (volRes)    cc(cudaGraphicsUnregisterResource(volRes));
+    // if (tfFullRes) cc(cudaGraphicsUnregisterResource(tfFullRes));
+    // if (tfBackRes) cc(cudaGraphicsUnregisterResource(tfBackRes));
     QOpenGLFunctions f(QOpenGLContext::currentContext());
     if (0 != outPBO) f.glDeleteBuffers(1, &outPBO);
 }
@@ -97,13 +97,21 @@ void VolRenRaycastCuda::setVolume(const std::shared_ptr<IVolume> &volume)
         this->volume->d() * this->volume->sz());
 }
 
-void VolRenRaycastCuda::setTF(const mslib::TF &tf, bool preinteg, float stepsize, Filter filter)
+//void VolRenRaycastCuda::setTF(const mslib::TF &tf, bool preinteg, float stepsize, Filter filter)
+//{
+//    BASE::setTF(tf, preinteg, stepsize, filter);
+//    if (tfFullRes) cc(cudaGraphicsUnregisterResource(tfFullRes));
+//    cc(cudaGraphicsGLRegisterImage(&tfFullRes, tfInteg->getTexFull()->textureId(), GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly));
+//    if (tfBackRes) cc(cudaGraphicsUnregisterResource(tfBackRes));
+//    cc(cudaGraphicsGLRegisterImage(&tfBackRes, tfInteg->getTexBack()->textureId(), GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly));
+//}
+
+void VolRenRaycastCuda::setColormap(const std::shared_ptr<IColormap>& colormap)
 {
-    BASE::setTF(tf, preinteg, stepsize, filter);
-    if (tfFullRes) cc(cudaGraphicsUnregisterResource(tfFullRes));
-    cc(cudaGraphicsGLRegisterImage(&tfFullRes, tfInteg->getTexFull()->textureId(), GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly));
-    if (tfBackRes) cc(cudaGraphicsUnregisterResource(tfBackRes));
-    cc(cudaGraphicsGLRegisterImage(&tfBackRes, tfInteg->getTexBack()->textureId(), GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly));
+    auto ptr = std::dynamic_pointer_cast<IColormapCUDA>(colormap);
+    if (!ptr)
+        ptr = std::make_shared<ColormapGLCUDA>(colormap);
+    this->colormap = ptr;
 }
 
 std::shared_ptr<ImageAbstract> VolRenRaycastCuda::output() const
@@ -115,6 +123,8 @@ void VolRenRaycastCuda::raycast(const QMatrix4x4&, const QMatrix4x4& matView, co
 {
     // TODO: getCUDAMappedArray();
     cudaGraphicsResource_t volRes = this->volume->getCUDAResource();
+    cudaGraphicsResource_t tfFullRes = this->colormap->cudaResFull();
+    cudaGraphicsResource_t tfBackRes = this->colormap->cudaResBack();
 
     cc(cudaGraphicsMapResources(1, &entryRes, 0));
     cc(cudaGraphicsMapResources(1, &exitRes, 0));
@@ -133,15 +143,15 @@ void VolRenRaycastCuda::raycast(const QMatrix4x4&, const QMatrix4x4& matView, co
     cc(cudaGraphicsSubResourceGetMappedArray(&tfFullArr, tfFullRes, 0, 0));
     cc(cudaGraphicsSubResourceGetMappedArray(&tfBackArr, tfBackRes, 0, 0));
 
-    static std::map<Filter, cudaTextureFilterMode> vr2cu
-            = { { Filter_Linear, cudaFilterModeLinear }
-              , { Filter_Nearest, cudaFilterModePoint } };
-    assert(vr2cu.count(tfFilter) > 0);
+    static std::map<IColormap::Filter, cudaTextureFilterMode> vr2cu
+            = { { IColormap::Filter_Linear, cudaFilterModeLinear }
+              , { IColormap::Filter_Nearest, cudaFilterModePoint } };
+    assert(vr2cu.count(colormap->filter()) > 0);
 
     updateCUDALights(matView);
 
     cudacast(this->volume->w(), this->volume->h(), this->volume->d(), volArr,
-             tfInteg->getTexFull()->width(), tfInteg->getTexFull()->height(), stepsize, vr2cu[tfFilter], tfFullArr, tfBackArr,
+             colormap->nColors(), colormap->nColors(), colormap->stepsize(), vr2cu[colormap->filter()], tfFullArr, tfBackArr,
              scalarMin, scalarMax,
              frustum.getTextureWidth(), frustum.getTextureHeight(), entryArr, exitArr, outPtr);
 

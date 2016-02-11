@@ -13,7 +13,7 @@ namespace volren {
 
 // template<class BASE> class IVolumeCUDA;
 
-class VolRenRaycastCuda : public TFIntegrated<VolRenRaycast>
+class VolRenRaycastCuda : public VolRenRaycast
 {
 public:
     VolRenRaycastCuda();
@@ -23,7 +23,7 @@ public:
     virtual void initializeGL();
     virtual void resize(int w, int h);
     virtual void setVolume(const std::shared_ptr<IVolume> &volume);
-    virtual void setTF(const mslib::TF& tf, bool preinteg, float stepsize, Filter filter);
+    virtual void setColormap(const std::shared_ptr<IColormap>& colormap);
     virtual std::shared_ptr<ImageAbstract> output() const;
 
 protected:
@@ -36,10 +36,11 @@ private:
 
 protected:
     std::shared_ptr<IVolumeCUDA> volume;
+    std::shared_ptr<IColormapCUDA> colormap;
     GLuint outPBO;
     cudaGraphicsResource *entryRes, *exitRes, *outRes;
     int texWidth, texHeight;
-    cudaGraphicsResource *tfFullRes, *tfBackRes;
+    // cudaGraphicsResource *tfFullRes, *tfBackRes;
 };
 
 } // namespace volren

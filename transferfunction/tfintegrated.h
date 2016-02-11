@@ -31,7 +31,7 @@ public:
         this->tfFilter = filter;
         this->stepsize = stepsize;
         tfInteg->convertTo(preinteg);
-        tfInteg->integrate(tf.colorMap(), tf.resolution(), stepsize);
+        tfInteg->integrate(tf.bufPtr(), tf.nColors(), stepsize);
         static std::map<Filter, QOpenGLTexture::Filter> vr2qt
                 = { { Filter_Linear, QOpenGLTexture::Linear }
                   , { Filter_Nearest, QOpenGLTexture::Nearest } };
