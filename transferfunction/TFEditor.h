@@ -71,15 +71,12 @@ class TFEditor : public QWidget
     friend class TFDrawArea;
     friend class TFColorControlArea;
 public:
-    TFEditor(QWidget *parent = 0, int resolution = 1024, int arraySize = 1024);
+    TFEditor(QWidget *parent = 0, int resolution = 1024);
     virtual ~TFEditor();
 
-    TF       &getTF()       { return *_tf; }
-    const TF &getTF() const { return *_tf; }
-    void setTF(const TF &tf);
-
-    int getTFResolution() const { return _tf->resolution(); }
-    float *getTFColorMap() { return _tf->colorMap(); }
+    std::shared_ptr<TF const> getTF() const { return _tf; }
+    void setTF(std::shared_ptr<TF> tf);
+    void setTF(const TF& tf);
 
     bool histogramEnabled() const { return _histogramShowAction->isChecked(); }
     Histogram       &getHistogram()       { return *_histogram; }
@@ -106,7 +103,7 @@ protected:
     void emitTFChanged(bool makeHistory = false) { emit tfChanged(); emit tfChanged(makeHistory); emit tfChanged(*_tf); }
 
 private:
-    TF *_tf;
+    std::shared_ptr<TF> _tf;
     Histogram *_histogram;
 
     TFColorMapArea *_colorMapArea;
@@ -142,7 +139,6 @@ public slots:
 signals:
     void tfChanged();
     void tfChanged(bool makeHistory);
-//    void tfChanged(mslib::TF &tf);
     void tfChanged(const mslib::TF &tf);
     void bgColorChanged(const QColor &color);
 };
@@ -162,7 +158,7 @@ protected:
     virtual void mouseReleaseEvent(QMouseEvent *e);
     virtual void paintEvent(QPaintEvent *e);
 
-    TF &tf() { return _tfEditor->getTF(); }
+    TF &tf() { return *(_tfEditor->_tf); }
     void updateImage();
 
 private:
@@ -188,9 +184,9 @@ protected:
     virtual void mousePressEvent(QMouseEvent *e);
     virtual void mouseReleaseEvent(QMouseEvent *e);
     virtual void paintEvent(QPaintEvent *e);
-    
-    TF       &tf()       { return _tfEditor->getTF(); }
-    const TF &tf() const { return _tfEditor->getTF(); }
+
+    TF& tf() { return *(_tfEditor->_tf); }
+    const TF &tf() const { return *(_tfEditor->_tf); }
     QTransform getTransform() const;
 
     void setMouseCursor(const TFControlPoint &ctrl);
@@ -248,8 +244,8 @@ protected:
     virtual void mouseReleaseEvent(QMouseEvent *e);
     virtual void paintEvent(QPaintEvent *e);
 
-    TF       &tf()       { return _tfEditor->getTF(); }
-    const TF &tf() const { return _tfEditor->getTF(); }
+    TF       &tf()       { return *(_tfEditor->_tf); }
+    const TF &tf() const { return *(_tfEditor->_tf); }
     QTransform getTransform() const;        // window coordinates to painting coordinates
     int findControl(const QPointF &pos) const;
 

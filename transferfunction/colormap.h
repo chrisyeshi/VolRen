@@ -3,31 +3,72 @@
 
 #include <QSharedPointer>
 #include <QOpenGLTexture>
+#include <QColor>
 #include <tfintegrater.h>
-#include <cuda_runtime.h>
-#include <cuda_gl_interop.h>
+#ifdef ENABLE_CUDA
+    #include <cuda_runtime.h>
+    #include <cuda_gl_interop.h>
+#endif // ENABLE_CUDA
 
 namespace yy {
 namespace volren {
 
+//
+//
+// Helper classes
+//
+//
+
 class Rgba
 {
 public:
-	Rgba() : r(0.f), g(0.f), b(0.f), a(0.f) {}
-	Rgba(float r, float g, float b, float a) : r(r), g(g), b(b), a(a) {}
-    float r, g, b, a;
+    Rgba() { for (auto& d : data) d = 0.f; }
+    Rgba(float r, float g, float b, float a) { data[0] = r; data[1] = g; data[2] = b; data[3] = a; }
     static int nFloats() { return 4; }
+    float r() const { return data[0]; }
+    float& r() { return data[0]; }
+    float g() const { return data[1]; }
+    float& g() { return data[1]; }
+    float b() const { return data[2]; }
+    float& b() { return data[2]; }
+    float a() const { return data[3]; }
+    float& a() { return data[3]; }
+    float operator[](int i) const { return data[i]; }
+    float& operator[](int i) { return data[i]; }
+
+    operator QColor() const
+    {
+        QColor ret;
+        ret.setRgbF(data[0], data[1], data[2], data[3]);
+        return ret;
+    }
+
+private:
+    float data[4];
 };
+
+//
+//
+// Interfaces
+//
+//
 
 class IColormap
 {
 public:
     enum Filter { Filter_Linear, Filter_Nearest };
     virtual const std::vector<Rgba>& buffer() const = 0;
-    int resolution() const { return buffer().size(); }
     virtual float stepsize() const = 0;
     virtual bool preintegrate() const = 0;
     virtual Filter filter() const = 0;
+
+public:
+    const float* bufPtr() const { return reinterpret_cast<const float*>(buffer().data()); }
+    int nColors() const { return buffer().size(); }
+    int nFloatsPerColor() const { return Rgba::nFloats(); }
+    int nFloats() const { return nColors() * nFloatsPerColor(); }
+    int nBytesPerColor() const { return nFloatsPerColor() * sizeof(float); }
+    int nBytes() const { return nColors() * nBytesPerColor(); }
 };
 
 class IColormapGL : public virtual IColormap
@@ -37,12 +78,20 @@ public:
     virtual QSharedPointer<QOpenGLTexture> texBack() const = 0;
 };
 
+#ifdef ENABLE_CUDA
 class IColormapCUDA : public virtual IColormap
 {
 public:
     virtual cudaGraphicsResource* cudaResFull() const = 0;
     virtual cudaGraphicsResource* cudaResBack() const = 0;
 };
+#endif // ENABLE_CUDA
+
+//
+//
+// Implementations
+//
+//
 
 class Colormap : public virtual IColormap
 {
@@ -105,6 +154,7 @@ private:
 	}
 };
 
+#ifdef ENABLE_CUDA
 class ColormapGLCUDA : public virtual IColormapGL, public virtual IColormapCUDA
 {
 public:
@@ -155,6 +205,7 @@ private:
     mutable cudaGraphicsResource* _cudaResFull;
     mutable cudaGraphicsResource* _cudaResBack;
 };
+#endif // ENABLE_CUDA
 
 } // namespace volren
 } // namespace yy

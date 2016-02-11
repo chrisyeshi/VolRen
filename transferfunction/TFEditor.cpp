@@ -124,19 +124,19 @@ void Histogram::increment(double value)
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-TFEditor::TFEditor(QWidget *parent, int resolution, int arraySize)
+TFEditor::TFEditor(QWidget *parent, int resolution)
     : QWidget(parent)
 {
     _drawAreaLeftMargin = 8;
     _drawAreaRightMargin = 8;
     _colorMapAreaDrawAreaVerticalSpacing = 4;
     _drawAreaColorControlAreaVerticalSpacing = 4;
-    _isTracking = false;
+    _isTracking = true;
 
     bool enableVSlider = false;
     bool enableButtons = false;
 
-    _tf = new TF(resolution, arraySize);
+    _tf = std::make_shared<TF>(resolution);
     _histogram = new Histogram(256);
 
     _colorMapArea = new TFColorMapArea(this);
@@ -225,8 +225,14 @@ TFEditor::TFEditor(QWidget *parent, int resolution, int arraySize)
 
 TFEditor::~TFEditor()
 {
-    delete _tf;
     delete _histogram;
+}
+
+void TFEditor::setTF(std::shared_ptr<TF> tf)
+{
+    _tf = tf;
+    updateTF(true, true);
+    emitTFChanged(true);
 }
 
 void TFEditor::setTF(const TF &tf)
@@ -295,7 +301,7 @@ void TFEditor::saveAs()
 
 void TFEditor::addGaussianObject()
 {
-    float hf = 0.5f * 0.1f * sqrt(2.0f * 3.14159265358979323846f);
+    float hf = 0.5f * 0.1f * sqrt(2.0f * M_PI);
     _tf->addGaussianObject(0.5f, 0.1f, hf);
     _colorMapArea->updateImage();
     repaint();
@@ -304,10 +310,9 @@ void TFEditor::addGaussianObject()
 
 void TFEditor::setBGColor(const QColor &color)
 {
-    const float *bgColor = _tf->backgroundColor();
-    if (bgColor[0] != color.redF() ||
-        bgColor[1] != color.greenF() ||
-        bgColor[2] != color.blueF())
+    if (_tf->backgroundColor().r() != color.redF()
+     || _tf->backgroundColor().g() != color.greenF()
+     || _tf->backgroundColor().b() != color.blueF())
     {
         _tf->setBackgroundColor(color.redF(), color.greenF(), color.blueF());
         _colorMapArea->updateImage();
@@ -388,16 +393,16 @@ void TFColorMapArea::paintEvent(QPaintEvent*)
 void TFColorMapArea::updateImage()
 {
     if (_imageBuffer == nullptr)                                    // not initialized
-        _imageBuffer = new unsigned char [tf().resolution() * 4];
-    else if (_image.width() != tf().resolution())                   // size changed
+        _imageBuffer = new unsigned char [tf().nColors() * 4];
+    else if (_image.width() != tf().nColors())                   // size changed
     {
         delete [] _imageBuffer;
-        _imageBuffer = new unsigned char [tf().resolution() * 4];
+        _imageBuffer = new unsigned char [tf().nBytes()];
     }
-    QColor bgColor = fromRgb(tf().backgroundColor());
-    for (int i = 0; i < tf().resolution(); i++)
+    QColor bgColor = tf().backgroundColor();
+    for (int i = 0; i < tf().nColors(); i++)
     {
-        QColor color = fromRgba(&tf().colorMap()[i * 4]);
+        QColor color = tf().buffer()[i];
         QColor blendedColor;
         blendedColor.setRedF  (color.redF()   * color.alphaF() + bgColor.redF()   * (1.0 - color.alphaF()));
         blendedColor.setGreenF(color.greenF() * color.alphaF() + bgColor.greenF() * (1.0 - color.alphaF()));
@@ -408,7 +413,7 @@ void TFColorMapArea::updateImage()
         _imageBuffer[i * 4 + 2] = blendedColor.red();
         _imageBuffer[i * 4 + 3] = 255;
     }
-    _image = QImage(_imageBuffer, tf().resolution(), 1, QImage::Format_RGB32);
+    _image = QImage(_imageBuffer, tf().nColors(), 1, QImage::Format_RGB32);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -452,9 +457,9 @@ void TFDrawArea::mouseMoveEvent(QMouseEvent *e)
 
     if (e->buttons() & Qt::LeftButton || e->buttons() & Qt::RightButton)
     {
-        int lastIndex = valueToIndex(_lastPos.x(), tf().arraySize());
+        int lastIndex = valueToIndex(_lastPos.x(), tf().nColors());
         float lastAlpha = tf().alphaArray()[lastIndex];
-        int index = valueToIndex(pos.x(), tf().arraySize());
+        int index = valueToIndex(pos.x(), tf().nColors());
 
         if (e->buttons() & Qt::LeftButton)
         {
@@ -498,10 +503,8 @@ void TFDrawArea::mouseMoveEvent(QMouseEvent *e)
                 float alpha = ytoa(clamp((float)pos.y(), 0.0f, 1.0f));
                 int step = (index <= lastIndex ? 1 : -1);
                 for (int i = index; i != lastIndex; i += step)
-                {
-                    tf().alphaArray()[i] = lerp(alpha, lastAlpha, (float)std::abs(i - index) / (float)std::abs(lastIndex - index));
-                }
-                tf().alphaArray()[index] = alpha;       // for the case index = lastIndex
+                    tf().setAlpha(i, lerp(alpha, lastAlpha, (float)std::abs(i - index) / (float)std::abs(lastIndex - index)));
+                tf().setAlpha(index, alpha); // for the case index = lastIndex
                 _tfEditor->updateTF(true, false);
                 _changed = true;
             }
@@ -512,10 +515,8 @@ void TFDrawArea::mouseMoveEvent(QMouseEvent *e)
         {
             int step = (index <= lastIndex ? 1 : -1);
             for (int i = index; i != lastIndex; i += step)
-            {
-                tf().alphaArray()[i] = lerp(0.0f, lastAlpha, (float)std::abs(i - index) / (float)std::abs(lastIndex - index));
-            }
-            tf().alphaArray()[index] = 0.0f;            // for the case index = lastIndex
+                tf().setAlpha(i, lerp(0.0f, lastAlpha, (float)std::abs(i - index) / (float)std::abs(lastIndex - index)));
+            tf().setAlpha(index, 0.f);      // for the case index = lastIndex
             _lastPos = pos;
             _tfEditor->updateTF(true, false);
             _changed = true;
@@ -533,7 +534,7 @@ void TFDrawArea::mouseMoveEvent(QMouseEvent *e)
 void TFDrawArea::mousePressEvent(QMouseEvent *e)
 {
     QPointF pos = getTransform().map(e->localPos());
-    int index = valueToIndex(pos.x(), tf().arraySize());
+    int index = valueToIndex(pos.x(), tf().nColors());
     if (e->buttons() & Qt::LeftButton)
     {
         TFControlPoint ctrl = findControl(pos);
@@ -547,7 +548,7 @@ void TFDrawArea::mousePressEvent(QMouseEvent *e)
         else
         {
             float alpha = ytoa(clamp((float)pos.y(), 0.0f, 1.0f));
-            tf().alphaArray()[index] = alpha;
+            tf().setAlpha(index, alpha);
             _tfEditor->updateTF(true, false);
             _changed = true;
             
@@ -566,7 +567,7 @@ void TFDrawArea::mousePressEvent(QMouseEvent *e)
         }
         else
         {
-            tf().alphaArray()[index] = 0.0f;
+            tf().setAlpha(index, 0.f);
             _tfEditor->updateTF(true, false);
             _changed = true;
         }
@@ -650,7 +651,7 @@ void TFDrawArea::paintEvent(QPaintEvent*)
         }
     }
 
-    int res = tf().resolution();
+    int res = tf().nColors();
     QPointF *points = new QPointF[res + 4];
     points[0] = QPointF(0.0, 0.0);
     points[res + 3] = QPointF(1.0, 0.0);
@@ -678,7 +679,7 @@ void TFDrawArea::paintEvent(QPaintEvent*)
         painter.drawPolyline(&points[1], res + 2);
     }
 
-    int size = tf().arraySize();
+    int size = tf().nColors();
     delete [] points;
     points = new QPointF[size * 2 + 2];
     points[0] = QPointF(0.0, 0.0);
@@ -851,22 +852,22 @@ float TFDrawArea::ytoa(float y) const
 void TFDrawArea::updateImage()
 {
     if (_imageBuffer == nullptr)                                    // not initialized
-        _imageBuffer = new unsigned char [tf().resolution() * 4];
-    else if (_image.width() != tf().resolution())                   // size changed
+        _imageBuffer = new unsigned char [tf().nBytes()];
+    else if (_image.width() != tf().nColors())                   // size changed
     {
         delete [] _imageBuffer;
-        _imageBuffer = new unsigned char [tf().resolution() * 4];
+        _imageBuffer = new unsigned char [tf().nBytes()];
     }
-    for (int i = 0; i < tf().resolution(); i++)
+    for (int i = 0; i < tf().nColors(); i++)
     {
-        QColor color = fromRgb(&tf().colorMap()[i * 4]);
+        QColor color = tf().buffer()[i];
         // bgr1
         _imageBuffer[i * 4]     = color.blue();
         _imageBuffer[i * 4 + 1] = color.green();
         _imageBuffer[i * 4 + 2] = color.red();
         _imageBuffer[i * 4 + 3] = 255;
     }
-    _image = QImage(_imageBuffer, tf().resolution(), 1, QImage::Format_RGB32);
+    _image = QImage(_imageBuffer, tf().nColors(), 1, QImage::Format_RGB32);
 }
 
 void TFDrawArea::sliderValueChanged(int value)

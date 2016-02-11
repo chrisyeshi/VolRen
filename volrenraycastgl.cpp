@@ -69,6 +69,8 @@ void VolRenRaycastGL::setVolume(const std::shared_ptr<IVolume> &volume)
 
 void VolRenRaycastGL::setColormap(const std::shared_ptr<IColormap>& colormap)
 {
+    if (this->colormap == colormap)
+        return;
     std::shared_ptr<IColormapGL> ptr = std::dynamic_pointer_cast<IColormapGL>(colormap);
     if (!ptr)
         ptr = std::make_shared<ColormapGL>(colormap);

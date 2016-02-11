@@ -39,12 +39,14 @@ protected:
     std::shared_ptr<IVolumeCUDA> volume;
     std::shared_ptr<cudaArray> tfArr;
     int texWidth, texHeight, layers;
+    std::shared_ptr<IColormap> colormap;
     bool preintegrate;
     IColormap::Filter tfFilter;
     float stepsize;
     QSharedPointer<QOpenGLTexture> tfTex;
 
 private:
+    void updateColormapResources();
     void newOutPBO(std::shared_ptr<GLuint> *outPBO, cudaGraphicsResource **outRes, int w, int h, int l);
 };
 

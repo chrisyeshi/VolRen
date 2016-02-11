@@ -99,42 +99,7 @@ void VolRenRaycastRAF::setVolume(const std::shared_ptr<IVolume>& volume)
 
 void VolRenRaycastRAF::setColormap(const std::shared_ptr<IColormap>& colormap)
 {
-    this->stepsize = colormap->stepsize();
-    this->preintegrate = colormap->preintegrate();
-    this->tfFilter = colormap->filter();
-    if (tfTex.isNull() || tfTex->width() != colormap->resolution() || tfTex->height() != 1)
-    {
-        tfTex.reset(new QOpenGLTexture(QOpenGLTexture::Target1D));
-        tfTex->setFormat(QOpenGLTexture::RGBA32F);
-        tfTex->setSize(colormap->resolution());
-        tfTex->allocateStorage();
-        tfTex->setWrapMode(QOpenGLTexture::ClampToEdge);
-    }
-    static std::map<IColormap::Filter, QOpenGLTexture::Filter> vr2qt
-        = { { IColormap::Filter_Linear, QOpenGLTexture::Linear }
-          , { IColormap::Filter_Nearest, QOpenGLTexture::Nearest } };
-          assert(vr2qt.count(tfFilter) > 0);
-    tfTex->setMinMagFilters(vr2qt[tfFilter], vr2qt[tfFilter]);
-    tfTex->setData(QOpenGLTexture::RGBA, QOpenGLTexture::Float32, reinterpret_cast<const float*>(colormap->buffer().data()));
-    // unable to register image with 1D texture
-    // creating cudaArray manually
-    cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc(32, 32, 32, 32, cudaChannelFormatKindFloat);
-    tfArr.reset([&](){
-        cudaArray* arr;
-        cc(cudaMallocArray(&arr, &channelDesc, colormap->resolution()));
-        cc(cudaMemcpyToArray(arr, 0, 0, reinterpret_cast<const float*>(colormap->buffer().data()), 4 * colormap->resolution() * sizeof(float), cudaMemcpyHostToDevice));
-        return arr;
-    }(), [](cudaArray* arr){
-        cc(cudaFreeArray(arr));
-    });
-    // define number of layers for RAF
-    int newLayers = std::min(colormap->resolution(), int(maxLayers));
-    if (layers != newLayers)
-    {
-        layers = 8;
-        newOutPBO(&rafPBO, &rafRes, texWidth, texHeight, layers);
-        newOutPBO(&depPBO, &depRes, texWidth, texHeight, layers);
-    }
+    this->colormap = colormap;
 }
 
 std::shared_ptr<ImageAbstract> VolRenRaycastRAF::output() const
@@ -155,6 +120,7 @@ void VolRenRaycastRAF::newFBOs(int w, int h)
 
 void VolRenRaycastRAF::raycast(const QMatrix4x4& m, const QMatrix4x4& v, const QMatrix4x4& p)
 {
+    updateColormapResources();
     // TODO: getCUDAMappedArray();
     cudaGraphicsResource_t volRes = this->volume->getCUDAResource();
 
@@ -209,6 +175,46 @@ void VolRenRaycastRAF::raycast(const QMatrix4x4& m, const QMatrix4x4& v, const Q
     cc(cudaGraphicsUnmapResources(1, &exitRes, 0));
     cc(cudaGraphicsUnmapResources(1, &rafRes, 0));
     cc(cudaGraphicsUnmapResources(1, &depRes, 0));
+}
+
+void VolRenRaycastRAF::updateColormapResources()
+{
+    this->stepsize = colormap->stepsize();
+    this->preintegrate = colormap->preintegrate();
+    this->tfFilter = colormap->filter();
+    if (tfTex.isNull() || tfTex->width() != colormap->nColors() || tfTex->height() != 1)
+    {
+        tfTex.reset(new QOpenGLTexture(QOpenGLTexture::Target1D));
+        tfTex->setFormat(QOpenGLTexture::RGBA32F);
+        tfTex->setSize(colormap->nColors());
+        tfTex->allocateStorage();
+        tfTex->setWrapMode(QOpenGLTexture::ClampToEdge);
+    }
+    static std::map<IColormap::Filter, QOpenGLTexture::Filter> vr2qt
+        = { { IColormap::Filter_Linear, QOpenGLTexture::Linear }
+          , { IColormap::Filter_Nearest, QOpenGLTexture::Nearest } };
+          assert(vr2qt.count(tfFilter) > 0);
+    tfTex->setMinMagFilters(vr2qt[tfFilter], vr2qt[tfFilter]);
+    tfTex->setData(QOpenGLTexture::RGBA, QOpenGLTexture::Float32, colormap->bufPtr());
+    // unable to register image with 1D texture
+    // creating cudaArray manually
+    cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc(32, 32, 32, 32, cudaChannelFormatKindFloat);
+    tfArr.reset([&](){
+        cudaArray* arr;
+        cc(cudaMallocArray(&arr, &channelDesc, colormap->nColors()));
+        cc(cudaMemcpyToArray(arr, 0, 0, colormap->bufPtr(), colormap->nBytes(), cudaMemcpyHostToDevice));
+        return arr;
+    }(), [](cudaArray* arr){
+        cc(cudaFreeArray(arr));
+    });
+    // define number of layers for RAF
+    int newLayers = std::min(colormap->nColors(), int(maxLayers));
+    if (layers != newLayers)
+    {
+        layers = 8;
+        newOutPBO(&rafPBO, &rafRes, texWidth, texHeight, layers);
+        newOutPBO(&depPBO, &depRes, texWidth, texHeight, layers);
+    }
 }
 
 void VolRenRaycastRAF::newOutPBO(std::shared_ptr<GLuint>* outPBO, cudaGraphicsResource** outRes, int w, int h, int l)

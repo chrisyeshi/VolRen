@@ -151,8 +151,7 @@ void VolRenRaycastCuda::raycast(const QMatrix4x4&, const QMatrix4x4& matView, co
     updateCUDALights(matView);
 
     cudacast(this->volume->w(), this->volume->h(), this->volume->d(), volArr,
-             colormap->resolution(), colormap->resolution(), colormap->stepsize(), vr2cu[colormap->filter()], tfFullArr, tfBackArr,
-//             tfInteg->getTexFull()->width(), tfInteg->getTexFull()->height(), stepsize, vr2cu[tfFilter], tfFullArr, tfBackArr,
+             colormap->nColors(), colormap->nColors(), colormap->stepsize(), vr2cu[colormap->filter()], tfFullArr, tfBackArr,
              scalarMin, scalarMax,
              frustum.getTextureWidth(), frustum.getTextureHeight(), entryArr, exitArr, outPtr);
 
