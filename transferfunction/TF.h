@@ -165,12 +165,15 @@ private:
     std::vector<TFColorControl> _colorControls;     // color control points
     std::vector<TFGaussianObject> _gaussianObjects;
     float _stepsize;
+    bool _preintegrate;
     yy::volren::IColormap::Filter _filter;
     mutable bool _isUpdatedGL;
     mutable std::shared_ptr<yy::volren::TFIntegrater> _tfInteg;
 #ifdef ENABLE_CUDA
-    mutable cudaGraphicsResource* _cudaResFull;
-    mutable cudaGraphicsResource* _cudaResBack;
+    mutable std::shared_ptr<cudaGraphicsResource> _cudaResFull;
+    mutable std::shared_ptr<cudaGraphicsResource> _cudaResBack;
+//    mutable cudaGraphicsResource* _cudaResFull;
+//    mutable cudaGraphicsResource* _cudaResBack;
 #endif // ENABLE_CUDA
 };
 

@@ -26,22 +26,24 @@ void TFInteg2DGL::integrate(const float *colormap, int resolution, float stepsiz
     QOpenGLFunctions* f = QOpenGLContext::currentContext()->functions();
     tex1d->setData(QOpenGLTexture::RGBA, QOpenGLTexture::Float32, colormap);
     // framebuffer object
-    GLint oFbo;
+    GLint oFbo, viewport[4], activeTex, oTex;
+    newFbo();
     f->glGetIntegerv(GL_FRAMEBUFFER_BINDING, &oFbo);
     f->glBindFramebuffer(GL_FRAMEBUFFER, *fbo);
     f->glClear(GL_COLOR_BUFFER_BIT);
     // viewport
-    GLint viewport[4];
     f->glGetIntegerv(GL_VIEWPORT, viewport);
     f->glViewport(0, 0, resolution, resolution);
     // 1d texture
-    GLint activeTex;
     f->glGetIntegerv(GL_ACTIVE_TEXTURE, &activeTex);
-    tex1d->bind(0, QOpenGLTexture::ResetTextureUnit);
+    f->glActiveTexture(GL_TEXTURE0);
+    f->glGetIntegerv(GL_TEXTURE_1D, &oTex);
+    f->glBindTexture(GL_TEXTURE_1D, tex1d->textureId());
     // paint
     painter.paint("tf1d", 0, "resolution", resolution, "segLen", stepsize);
     // clean
-    tex1d->release(0, QOpenGLTexture::ResetTextureUnit);
+    f->glActiveTexture(GL_TEXTURE0);
+    f->glBindTexture(GL_TEXTURE_1D, oTex);
     f->glActiveTexture(activeTex);
 
 //    std::unique_ptr<GLubyte[]> pixels(new GLubyte [resolution * resolution * 4]);
@@ -83,6 +85,14 @@ void TFInteg2DGL::newResources(int resolution)
     texBack->setWrapMode(QOpenGLTexture::ClampToEdge);
     texBack->setSize(resolution, resolution);
     texBack->allocateStorage();
+    // new fbo
+    newFbo();
+}
+
+void TFInteg2DGL::newFbo()
+{
+    auto f = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_3_3_Core>();
+    f->initializeOpenGLFunctions();
     // new fbo
     fbo.reset([](){
         GLuint* fboPtr = new GLuint();

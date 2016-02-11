@@ -47,11 +47,8 @@ TF::TF(int resolution)
   , _blendMode(0)
   , _isUpdatedGL(false)
   , _stepsize(0.01f)
+  , _preintegrate(true)
   , _filter(Filter_Linear)
-#ifdef ENABLE_CUDA
-  , _cudaResFull(nullptr)
-  , _cudaResBack(nullptr)
-#endif // ENABLE_CUDA
 {
     _colorControls.push_back(TFColorControl(0.0f, 13.f/255.f, 132.f/255.f, 211.f/255.f));
     _colorControls.push_back(TFColorControl(0.5f, 244.f/255.f, 208.f/255.f, 27.f/255.f));
@@ -67,11 +64,8 @@ TF::TF(const TF &other)
   , _blendMode(0)
   , _isUpdatedGL(false)
   , _stepsize(0.01f)
+  , _preintegrate(true)
   , _filter(Filter_Linear)
-#ifdef ENABLE_CUDA
-  , _cudaResFull(nullptr)
-  , _cudaResBack(nullptr)
-#endif // ENABLE_CUDA
 {
     *this = other;
 }
@@ -102,18 +96,6 @@ void TF::clear()
     _gaussianObjects.clear();
     _isUpdatedGL = false;
     _tfInteg.reset();
-#ifdef ENABLE_CUDA
-    if (_cudaResFull)
-    {
-        cudaGraphicsUnregisterResource(_cudaResFull);
-        _cudaResFull = nullptr;
-    }
-    if (_cudaResBack)
-    {
-        cudaGraphicsUnregisterResource(_cudaResBack);
-        _cudaResBack = nullptr;
-    }
-#endif // ENABLE_CUDA
 }
 
 void TF::setResolution(int resolution)
@@ -288,12 +270,16 @@ TF TF::fromRainbowMap(int resolution)
 
 void TF::setPreIntegrate(bool preinteg)
 {
-    if (!_tfInteg)
-        _tfInteg = std::make_shared<yy::volren::TFIntegrater>(preinteg);
-    if (_tfInteg->isPreinteg() == preinteg)
+    if (_preintegrate == preinteg)
         return;
-    _tfInteg->convertTo(preinteg);
+    _preintegrate = preinteg;
     _isUpdatedGL = false;
+//    if (!_tfInteg)
+//        _tfInteg = std::make_shared<yy::volren::TFIntegrater>(preinteg);
+//    if (_tfInteg->isPreinteg() == preinteg)
+//        return;
+//    _tfInteg->convertTo(preinteg);
+//    _isUpdatedGL = false;
 }
 
 const std::vector<yy::volren::Rgba>& TF::buffer() const
@@ -303,9 +289,10 @@ const std::vector<yy::volren::Rgba>& TF::buffer() const
 
 bool TF::preintegrate() const
 {
-    if (!_tfInteg || !_isUpdatedGL)
-        tfIntegrate();
-    return _tfInteg->isPreinteg();
+    return _preintegrate;
+//    if (!_tfInteg || !_isUpdatedGL)
+//        tfIntegrate();
+//    return _tfInteg->isPreinteg();
 }
 
 QSharedPointer<QOpenGLTexture> TF::texFull() const
@@ -326,15 +313,33 @@ QSharedPointer<QOpenGLTexture> TF::texBack() const
 cudaGraphicsResource* TF::cudaResFull() const
 {
     if (!_cudaResFull || !_isUpdatedGL)
-        cudaGraphicsGLRegisterImage(&_cudaResFull, texFull()->textureId(), GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly);
-    return _cudaResFull;
+    {
+        _cudaResFull.reset([this]() {
+            cudaGraphicsResource* ptr = nullptr;
+            cudaGraphicsGLRegisterImage(&ptr, texFull()->textureId(), GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly);
+            return ptr;
+        }(), [](cudaGraphicsResource* ptr) {
+            cudaGraphicsUnregisterResource(ptr);
+            ptr = nullptr;
+        });
+    }
+    return _cudaResFull.get();
 }
 
 cudaGraphicsResource* TF::cudaResBack() const
 {
     if (!_cudaResBack || !_isUpdatedGL)
-        cudaGraphicsGLRegisterImage(&_cudaResBack, texBack()->textureId(), GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly);
-    return _cudaResBack;
+    {
+        _cudaResBack.reset([this]() {
+            cudaGraphicsResource* ptr = nullptr;
+            cudaGraphicsGLRegisterImage(&ptr, texBack()->textureId(), GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly);
+            return ptr;
+        }(), [](cudaGraphicsResource* ptr) {
+            cudaGraphicsUnregisterResource(ptr);
+            ptr = nullptr;
+        });
+    }
+    return _cudaResBack.get();
 }
 #endif // ENABLE_CUDA
 
@@ -342,6 +347,7 @@ void TF::tfIntegrate() const
 {
     if (!_tfInteg)
         _tfInteg = std::make_shared<yy::volren::TFIntegrater>();
+    _tfInteg->convertTo(_preintegrate);
     _tfInteg->integrate(reinterpret_cast<const float*>(_colorMap.data()), _colorMap.size(), _stepsize);
     static std::map<Filter, QOpenGLTexture::Filter> vr2qt
                 = { { Filter_Linear, QOpenGLTexture::Linear }

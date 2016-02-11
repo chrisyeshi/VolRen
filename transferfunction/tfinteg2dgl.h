@@ -29,6 +29,7 @@ private:
     Painter painter;
 
 	void newResources(int resolution);
+    void newFbo();
 };
 
 } // namespace volren

@@ -51,8 +51,6 @@ void ImageRAF::draw()
     auto f = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_3_3_Core>();
     f->initializeOpenGLFunctions();
     glClear(GL_COLOR_BUFFER_BIT);
-    glEnable(GL_TEXTURE_1D);
-    glEnable(GL_TEXTURE_3D);
     f->glActiveTexture(GL_TEXTURE0);
     f->glBindTexture(GL_TEXTURE_1D, tf->textureId());
     f->glActiveTexture(GL_TEXTURE1);
@@ -65,8 +63,6 @@ void ImageRAF::draw()
     f->glBindTexture(GL_TEXTURE_3D, 0);
     f->glActiveTexture(GL_TEXTURE0);
     f->glBindTexture(GL_TEXTURE_1D, 0);
-    glDisable(GL_TEXTURE_3D);
-    glDisable(GL_TEXTURE_1D);
 }
 
 } // namespace volren
