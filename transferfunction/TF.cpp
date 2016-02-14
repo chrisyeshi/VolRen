@@ -273,13 +273,7 @@ void TF::setPreIntegrate(bool preinteg)
     if (_preintegrate == preinteg)
         return;
     _preintegrate = preinteg;
-    _isUpdatedGL = false;
-//    if (!_tfInteg)
-//        _tfInteg = std::make_shared<yy::volren::TFIntegrater>(preinteg);
-//    if (_tfInteg->isPreinteg() == preinteg)
-//        return;
-//    _tfInteg->convertTo(preinteg);
-//    _isUpdatedGL = false;
+    _isUpdatedGL = false;\
 }
 
 const std::vector<yy::volren::Rgba>& TF::buffer() const
@@ -289,10 +283,7 @@ const std::vector<yy::volren::Rgba>& TF::buffer() const
 
 bool TF::preintegrate() const
 {
-    return _preintegrate;
-//    if (!_tfInteg || !_isUpdatedGL)
-//        tfIntegrate();
-//    return _tfInteg->isPreinteg();
+    return _preintegrate;\
 }
 
 QSharedPointer<QOpenGLTexture> TF::texFull() const

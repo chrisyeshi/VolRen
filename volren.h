@@ -20,7 +20,6 @@ class IVolume;
 namespace volren {
 
 enum Method { Method_Raycast_GL, Method_Raycast_CUDA, Method_Raycast_RAF, Method_Unknown };
-enum Filter { Filter_Linear, Filter_Nearest };
 
 class VolRen
 {
