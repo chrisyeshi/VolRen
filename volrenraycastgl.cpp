@@ -61,7 +61,7 @@ void VolRenRaycastGL::setVolume(const std::shared_ptr<IVolume> &volume)
         ptr.reset(new VolumeGL(volume));
     this->volume = ptr;
     // set bounding box dimension
-    _frustum.setVolSize(this->volume->w() * this->volume->sx(),
+    _frustum->setVolSize(this->volume->w() * this->volume->sx(),
                         this->volume->h() * this->volume->sy(),
                         this->volume->d() * this->volume->sz());
 }
@@ -83,7 +83,7 @@ std::shared_ptr<ImageAbstract> VolRenRaycastGL::output() const
 
 void VolRenRaycastGL::newFBOs()
 {
-    newFBO(_frustum.texWidth(), _frustum.texHeight(), &outFBO, &outTex, &outRen);
+    newFBO(_frustum->texWidth(), _frustum->texHeight(), &outFBO, &outTex, &outRen);
 }
 
 void VolRenRaycastGL::newFBO(int w, int h, std::shared_ptr<GLuint> *fbo, std::shared_ptr<GLuint> *tex, std::shared_ptr<GLuint> *ren) const
@@ -139,18 +139,18 @@ void VolRenRaycastGL::newFBO(int w, int h, std::shared_ptr<GLuint> *fbo, std::sh
     }
 }
 
-void VolRenRaycastGL::raycast(const QMatrix4x4&, const QMatrix4x4& matView, const QMatrix4x4&)
+void VolRenRaycastGL::raycast()
 {
     QOpenGLFunctions f(QOpenGLContext::currentContext());
     f.glBindFramebuffer(GL_FRAMEBUFFER, *outFBO);
     GLint viewport[4];
     f.glGetIntegerv(GL_VIEWPORT, viewport);
-    f.glViewport(0, 0, _frustum.texWidth(), _frustum.texHeight());
+    f.glViewport(0, 0, _frustum->texWidth(), _frustum->texHeight());
     f.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     f.glActiveTexture(GL_TEXTURE0);
-    f.glBindTexture(GL_TEXTURE_2D, *_frustum.texEntry());
+    f.glBindTexture(GL_TEXTURE_2D, *_frustum->texEntry());
     f.glActiveTexture(GL_TEXTURE1);
-    f.glBindTexture(GL_TEXTURE_2D, *_frustum.texExit());
+    f.glBindTexture(GL_TEXTURE_2D, *_frustum->texExit());
     f.glActiveTexture(GL_TEXTURE2);
     f.glBindTexture(GL_TEXTURE_3D, volume->getTexture()->textureId());
     f.glActiveTexture(GL_TEXTURE3);
@@ -160,7 +160,7 @@ void VolRenRaycastGL::raycast(const QMatrix4x4&, const QMatrix4x4& matView, cons
 
     for (unsigned int i = 0; i < lights.size(); ++i)
     {
-        QVector3D lightDir(matView.inverted() * QVector4D(lights[i].direction, 0.f));
+        QVector3D lightDir(_frustum->matView().inverted() * QVector4D(lights[i].direction, 0.f));
         lightDir.normalize();
         painter.setUniforms(QString("lights[%1].direction").arg(i).toStdString().data(), lightDir,
                             QString("lights[%1].ambient").arg(i).toStdString().data(), lights[i].ambient * lights[i].color,

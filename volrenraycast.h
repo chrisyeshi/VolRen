@@ -6,11 +6,9 @@
 #include <QOpenGLTexture>
 #include <QOpenGLFramebufferObject>
 #include <memory>
-#include "raycastfurstum.h"
-#include "raycastcube.h"
-#include "TF.h"
-#include "tfintegrater.h"
-#include "imageabstract.h"
+#include "raycastfrustum.h"
+
+class ImageAbstract;
 
 namespace yy {
 namespace volren {
@@ -23,14 +21,16 @@ public:
 
     virtual void initializeGL() {}
     virtual void resize(int w, int h);
-    virtual void render(const QMatrix4x4& v, const QMatrix4x4& p);
+    virtual void setMatVP(const QMatrix4x4& matView, const QMatrix4x4& matProj);
+    virtual void setFrustum(const std::shared_ptr<IRaycastFrustum> &frustum) { _frustum = frustum; }
+    virtual void render();
     virtual std::shared_ptr<ImageAbstract> output() const = 0;
 
 protected:
-    virtual void raycast(const QMatrix4x4& m, const QMatrix4x4& v, const QMatrix4x4& p) = 0;
+    virtual void raycast() = 0;
 
 protected:
-    RaycastFrustum _frustum;
+    std::shared_ptr<IRaycastFrustum> _frustum;
 
 private:
     VolRenRaycast(); // Not implemented

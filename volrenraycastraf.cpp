@@ -37,7 +37,7 @@ VolRenRaycastRAF::VolRenRaycastRAF()
  : VolRenRaycast(Method_Raycast_RAF)
  , entryRes(NULL), exitRes(NULL)
  , rafRes(NULL), depRes(NULL)
- , texWidth(_frustum.texWidth()), texHeight(_frustum.texHeight())
+ , texWidth(_frustum->texWidth()), texHeight(_frustum->texHeight())
  , layers(defaultLayers)
  , preintegrate(true)
  , tfFilter(IColormap::Filter_Linear)
@@ -62,7 +62,7 @@ VolRenRaycastRAF::~VolRenRaycastRAF()
 void VolRenRaycastRAF::initializeGL()
 {
     VolRenRaycast::initializeGL();
-    newFBOs(_frustum.texWidth(), _frustum.texHeight());
+    newFBOs(_frustum->texWidth(), _frustum->texHeight());
 }
 
 void VolRenRaycastRAF::resize(int w, int h)
@@ -90,7 +90,7 @@ void VolRenRaycastRAF::setVolume(const std::shared_ptr<IVolume>& volume)
         ptr.reset(new VolumeGLCUDA(volume));
     this->volume = ptr;
     // set bounding box dimension
-    _frustum.setVolSize(
+    _frustum->setVolSize(
         this->volume->w() * this->volume->sx(),
         this->volume->h() * this->volume->sy(),
         this->volume->d() * this->volume->sz());
@@ -111,13 +111,13 @@ void VolRenRaycastRAF::newFBOs(int w, int h)
     texWidth = w;
     texHeight = h;
 //    VolRenRaycast::newFBOs(texWidth, texHeight);
-    cc(cudaGraphicsGLRegisterImage(&entryRes, *_frustum.texEntry(), GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly));
-    cc(cudaGraphicsGLRegisterImage(&exitRes, *_frustum.texExit(), GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly));
+    cc(cudaGraphicsGLRegisterImage(&entryRes, *_frustum->texEntry(), GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly));
+    cc(cudaGraphicsGLRegisterImage(&exitRes, *_frustum->texExit(), GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly));
     newOutPBO(&rafPBO, &rafRes, texWidth, texHeight, layers);
     newOutPBO(&depPBO, &depRes, texWidth, texHeight, layers);
 }
 
-void VolRenRaycastRAF::raycast(const QMatrix4x4& m, const QMatrix4x4& v, const QMatrix4x4& p)
+void VolRenRaycastRAF::raycast()
 {
     updateColormapResources();
     // TODO: getCUDAMappedArray();
@@ -139,12 +139,12 @@ void VolRenRaycastRAF::raycast(const QMatrix4x4& m, const QMatrix4x4& v, const Q
     cc(cudaGraphicsSubResourceGetMappedArray(&volArr, volRes, 0, 0));
     // copy matrices
     cc(cudaMalloc(&mPtr, 16 * sizeof(float)));
-    cc(cudaMemcpy(mPtr, m.constData(), 16 * sizeof(float), cudaMemcpyHostToDevice));
+    cc(cudaMemcpy(mPtr, _frustum->matModel().constData(), 16 * sizeof(float), cudaMemcpyHostToDevice));
     cc(cudaMalloc(&mvPtr, 16 * sizeof(float)));
-    cc(cudaMemcpy(mvPtr, (v * m).constData(), 16 * sizeof(float), cudaMemcpyHostToDevice));
+    cc(cudaMemcpy(mvPtr, (_frustum->matView() * _frustum->matModel()).constData(), 16 * sizeof(float), cudaMemcpyHostToDevice));
     // near far from projection matrix
-    float a = p.column(2)[2];
-    float b = p.column(3)[2];
+    float a = _frustum->matProj().column(2)[2];
+    float b = _frustum->matProj().column(3)[2];
     float near = b / (a - 1);
     float far = b / (a + 1);
     // transfer function filter mode
