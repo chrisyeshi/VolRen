@@ -11,8 +11,6 @@
 namespace yy {
 namespace volren {
 
-// template<class BASE> class IVolumeCUDA;
-
 class VolRenRaycastCuda : public VolRenRaycast
 {
 public:
@@ -27,8 +25,7 @@ public:
     virtual std::shared_ptr<ImageAbstract> output() const;
 
 protected:
-    virtual void raycast(const QMatrix4x4&, const QMatrix4x4& matView, const QMatrix4x4&);
-//    virtual void volumeChanged();
+    virtual void raycast();
 
 private:
     void updateCUDAResources();
@@ -40,7 +37,6 @@ protected:
     GLuint outPBO;
     cudaGraphicsResource *entryRes, *exitRes, *outRes;
     int texWidth, texHeight;
-    // cudaGraphicsResource *tfFullRes, *tfBackRes;
 };
 
 } // namespace volren

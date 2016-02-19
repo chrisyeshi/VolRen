@@ -29,7 +29,7 @@ public:
 
 protected:
     virtual void newFBOs(int w, int h);
-    virtual void raycast(const QMatrix4x4& m, const QMatrix4x4& v, const QMatrix4x4& p);
+    virtual void raycast();
 
 protected:
     static const int defaultLayers = 8;

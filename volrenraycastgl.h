@@ -34,7 +34,7 @@ public:
     virtual std::shared_ptr<ImageAbstract> output() const;
 
 protected:
-    virtual void raycast(const QMatrix4x4&, const QMatrix4x4& matView, const QMatrix4x4&);
+    virtual void raycast();
 
 protected:
     void newFBOs();
