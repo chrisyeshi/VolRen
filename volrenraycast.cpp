@@ -19,22 +19,16 @@ VolRenRaycast::~VolRenRaycast()
 {
 }
 
-void VolRenRaycast::initializeGL()
-{
-    frustum.initializeGL();
-}
-
 void VolRenRaycast::resize(int w, int h)
 {
-    frustum.setResolution(w, h);
+    _frustum.setTexSize(w, h);
 }
 
 void VolRenRaycast::render(const QMatrix4x4& v, const QMatrix4x4 &p)
 {
-    frustum.entryTexture(v, p);
-    frustum.exitTexture(v, p);
+    _frustum.setMatVP(v, p);
     // raycast
-    raycast(frustum.modelMatrix(), v, p);
+    raycast(_frustum.matModel(), v, p);
 }
 
 } // namespace volren

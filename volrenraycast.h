@@ -21,7 +21,7 @@ public:
     VolRenRaycast(const Method& method);
     virtual ~VolRenRaycast();
 
-    virtual void initializeGL();
+    virtual void initializeGL() {}
     virtual void resize(int w, int h);
     virtual void render(const QMatrix4x4& v, const QMatrix4x4& p);
     virtual std::shared_ptr<ImageAbstract> output() const = 0;
@@ -30,11 +30,7 @@ protected:
     virtual void raycast(const QMatrix4x4& m, const QMatrix4x4& v, const QMatrix4x4& p) = 0;
 
 protected:
-    RaycastFurstum frustum;
-    // std::shared_ptr<VolumeGL> volume;
-
-protected:
-    // std::shared_ptr<VolumeGL> vol() const { return volume; }
+    RaycastFrustum _frustum;
 
 private:
     VolRenRaycast(); // Not implemented

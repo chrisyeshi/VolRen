@@ -37,7 +37,7 @@ VolRenRaycastRAF::VolRenRaycastRAF()
  : VolRenRaycast(Method_Raycast_RAF)
  , entryRes(NULL), exitRes(NULL)
  , rafRes(NULL), depRes(NULL)
- , texWidth(frustum.getTextureWidth()), texHeight(frustum.getTextureHeight())
+ , texWidth(_frustum.texWidth()), texHeight(_frustum.texHeight())
  , layers(defaultLayers)
  , preintegrate(true)
  , tfFilter(IColormap::Filter_Linear)
@@ -62,8 +62,7 @@ VolRenRaycastRAF::~VolRenRaycastRAF()
 void VolRenRaycastRAF::initializeGL()
 {
     VolRenRaycast::initializeGL();
-    newFBOs(frustum.getTextureWidth(), frustum.getTextureHeight());
-    // setTF(mslib::TF(), false, stepsize, tfFilter);
+    newFBOs(_frustum.texWidth(), _frustum.texHeight());
 }
 
 void VolRenRaycastRAF::resize(int w, int h)
@@ -91,7 +90,7 @@ void VolRenRaycastRAF::setVolume(const std::shared_ptr<IVolume>& volume)
         ptr.reset(new VolumeGLCUDA(volume));
     this->volume = ptr;
     // set bounding box dimension
-    frustum.setVolumeDimension(
+    _frustum.setVolSize(
         this->volume->w() * this->volume->sx(),
         this->volume->h() * this->volume->sy(),
         this->volume->d() * this->volume->sz());
@@ -112,8 +111,8 @@ void VolRenRaycastRAF::newFBOs(int w, int h)
     texWidth = w;
     texHeight = h;
 //    VolRenRaycast::newFBOs(texWidth, texHeight);
-    cc(cudaGraphicsGLRegisterImage(&entryRes, *frustum.entryTexture(), GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly));
-    cc(cudaGraphicsGLRegisterImage(&exitRes, *frustum.exitTexture(), GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly));
+    cc(cudaGraphicsGLRegisterImage(&entryRes, *_frustum.texEntry(), GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly));
+    cc(cudaGraphicsGLRegisterImage(&exitRes, *_frustum.texExit(), GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly));
     newOutPBO(&rafPBO, &rafRes, texWidth, texHeight, layers);
     newOutPBO(&depPBO, &depRes, texWidth, texHeight, layers);
 }

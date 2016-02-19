@@ -35,7 +35,7 @@ VolRenRaycastCuda::VolRenRaycastCuda()
  : BASE(Method_Raycast_CUDA)
  , outPBO(0)
  , entryRes(NULL), exitRes(NULL), outRes(NULL)
- , texWidth(frustum.getTextureWidth()), texHeight(frustum.getTextureHeight())
+ , texWidth(_frustum.texWidth()), texHeight(_frustum.texHeight())
 // , volRes(0)
  // , tfFullRes(0), tfBackRes(0)
 {
@@ -91,7 +91,7 @@ void VolRenRaycastCuda::setVolume(const std::shared_ptr<IVolume> &volume)
         ptr.reset(new VolumeGLCUDA(volume));
     this->volume = ptr;
     // set bounding box dimension
-    frustum.setVolumeDimension(
+    _frustum.setVolSize(
         this->volume->w() * this->volume->sx(),
         this->volume->h() * this->volume->sy(),
         this->volume->d() * this->volume->sz());
@@ -116,7 +116,7 @@ void VolRenRaycastCuda::setColormap(const std::shared_ptr<IColormap>& colormap)
 
 std::shared_ptr<ImageAbstract> VolRenRaycastCuda::output() const
 {
-    return std::make_shared<ImagePBO>(outPBO, frustum.getTextureWidth(), frustum.getTextureHeight());
+    return std::make_shared<ImagePBO>(outPBO, _frustum.texWidth(), _frustum.texHeight());
 }
 
 void VolRenRaycastCuda::raycast(const QMatrix4x4&, const QMatrix4x4& matView, const QMatrix4x4&)
@@ -153,7 +153,7 @@ void VolRenRaycastCuda::raycast(const QMatrix4x4&, const QMatrix4x4& matView, co
     cudacast(this->volume->w(), this->volume->h(), this->volume->d(), volArr,
              colormap->nColors(), colormap->nColors(), colormap->stepsize(), vr2cu[colormap->filter()], tfFullArr, tfBackArr,
              scalarMin, scalarMax,
-             frustum.getTextureWidth(), frustum.getTextureHeight(), entryArr, exitArr, outPtr);
+             _frustum.texWidth(), _frustum.texHeight(), entryArr, exitArr, outPtr);
 
     cc(cudaGraphicsUnmapResources(1, &tfBackRes, 0));
     cc(cudaGraphicsUnmapResources(1, &tfFullRes, 0));
@@ -168,16 +168,16 @@ void VolRenRaycastCuda::updateCUDAResources()
     QOpenGLFunctions f(QOpenGLContext::currentContext());
     // update entry and exit resources
     if (entryRes) cc(cudaGraphicsUnregisterResource(entryRes));
-    cc(cudaGraphicsGLRegisterImage(&entryRes, *frustum.entryTexture(), GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly));
+    cc(cudaGraphicsGLRegisterImage(&entryRes, *_frustum.texEntry(), GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly));
     if (exitRes)  cc(cudaGraphicsUnregisterResource(exitRes));
-    cc(cudaGraphicsGLRegisterImage(&exitRes,  *frustum.exitTexture(),  GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly));
+    cc(cudaGraphicsGLRegisterImage(&exitRes,  *_frustum.texExit(),  GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly));
     // update output PBO and CUDA resource
     // clean up
     if (0 != outPBO) f.glDeleteBuffers(1, &outPBO);
     // pbo
     f.glGenBuffers(1, &outPBO);
     f.glBindBuffer(GL_PIXEL_UNPACK_BUFFER, outPBO);
-    f.glBufferData(GL_PIXEL_UNPACK_BUFFER, 3 * frustum.getTextureWidth() * frustum.getTextureHeight() * sizeof(float), NULL, GL_STREAM_COPY);
+    f.glBufferData(GL_PIXEL_UNPACK_BUFFER, 3 * _frustum.texWidth() * _frustum.texHeight() * sizeof(float), NULL, GL_STREAM_COPY);
     f.glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
     // register cuda resource
     if (outRes) cc(cudaGraphicsUnregisterResource(outRes));
