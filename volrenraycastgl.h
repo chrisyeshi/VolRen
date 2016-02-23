@@ -8,7 +8,6 @@
 #include <QOpenGLFramebufferObject>
 #include <memory>
 #include "volume.h"
-#include "raycastcube.h"
 #include "painter.h"
 #include "TF.h"
 #include "tfintegrater.h"

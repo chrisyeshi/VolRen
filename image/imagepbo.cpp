@@ -42,7 +42,7 @@ void ImagePBO::draw()
 //    QOpenGLFunctions f(QOpenGLContext::currentContext());
     auto f = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_3_3_Core>();
     f->initializeOpenGLFunctions();
-    f->glClear(GL_COLOR_BUFFER_BIT);
+//    f->glClear(GL_COLOR_BUFFER_BIT);
     f->glBindTexture(GL_TEXTURE_2D, tex);
     f->glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pbo);
     f->glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, GL_RGB, GL_FLOAT, 0);

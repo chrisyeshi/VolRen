@@ -102,7 +102,7 @@ void VolRenRaycastGL::newFBO(int w, int h, std::shared_ptr<GLuint> *fbo, std::sh
     f.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     f.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     f.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    f.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, w, h, 0, GL_RGB, GL_FLOAT, NULL);
+    f.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, w, h, 0, GL_RGBA, GL_FLOAT, NULL);
     f.glBindTexture(GL_TEXTURE_2D, 0);
     // render buffer object
     ren->reset([](){
@@ -141,22 +141,25 @@ void VolRenRaycastGL::newFBO(int w, int h, std::shared_ptr<GLuint> *fbo, std::sh
 
 void VolRenRaycastGL::raycast()
 {
-    QOpenGLFunctions f(QOpenGLContext::currentContext());
-    f.glBindFramebuffer(GL_FRAMEBUFFER, *outFBO);
+    auto f = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_3_3_Core>();
+    f->initializeOpenGLFunctions();
+    GLint oFbo;
+    f->glGetIntegerv(GL_FRAMEBUFFER_BINDING, &oFbo);
+    f->glBindFramebuffer(GL_FRAMEBUFFER, *outFBO);
     GLint viewport[4];
-    f.glGetIntegerv(GL_VIEWPORT, viewport);
-    f.glViewport(0, 0, _frustum->texWidth(), _frustum->texHeight());
-    f.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    f.glActiveTexture(GL_TEXTURE0);
-    f.glBindTexture(GL_TEXTURE_2D, *_frustum->texEntry());
-    f.glActiveTexture(GL_TEXTURE1);
-    f.glBindTexture(GL_TEXTURE_2D, *_frustum->texExit());
-    f.glActiveTexture(GL_TEXTURE2);
-    f.glBindTexture(GL_TEXTURE_3D, volume->getTexture()->textureId());
-    f.glActiveTexture(GL_TEXTURE3);
-    f.glBindTexture(GL_TEXTURE_2D, colormap->texFull()->textureId());
-    f.glActiveTexture(GL_TEXTURE4);
-    f.glBindTexture(GL_TEXTURE_2D, colormap->texBack()->textureId());
+    f->glGetIntegerv(GL_VIEWPORT, viewport);
+    f->glViewport(0, 0, _frustum->texWidth(), _frustum->texHeight());
+    f->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    f->glActiveTexture(GL_TEXTURE0);
+    f->glBindTexture(GL_TEXTURE_2D, *_frustum->texEntry());
+    f->glActiveTexture(GL_TEXTURE1);
+    f->glBindTexture(GL_TEXTURE_2D, *_frustum->texExit());
+    f->glActiveTexture(GL_TEXTURE2);
+    f->glBindTexture(GL_TEXTURE_3D, volume->getTexture()->textureId());
+    f->glActiveTexture(GL_TEXTURE3);
+    f->glBindTexture(GL_TEXTURE_2D, colormap->texFull()->textureId());
+    f->glActiveTexture(GL_TEXTURE4);
+    f->glBindTexture(GL_TEXTURE_2D, colormap->texBack()->textureId());
 
     for (unsigned int i = 0; i < lights.size(); ++i)
     {
@@ -180,18 +183,18 @@ void VolRenRaycastGL::raycast()
                   "scalarMax", scalarMax,
                   "nLights", int(lights.size()));
 
-    f.glActiveTexture(GL_TEXTURE4);
-    f.glBindTexture(GL_TEXTURE_2D, 0);
-    f.glActiveTexture(GL_TEXTURE3);
-    f.glBindTexture(GL_TEXTURE_2D, 0);
-    f.glActiveTexture(GL_TEXTURE2);
-    f.glBindTexture(GL_TEXTURE_3D, 0);
-    f.glActiveTexture(GL_TEXTURE1);
-    f.glBindTexture(GL_TEXTURE_2D, 0);
-    f.glActiveTexture(GL_TEXTURE0);
-    f.glBindTexture(GL_TEXTURE_2D, 0);
-    f.glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-    f.glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    f->glActiveTexture(GL_TEXTURE4);
+    f->glBindTexture(GL_TEXTURE_2D, 0);
+    f->glActiveTexture(GL_TEXTURE3);
+    f->glBindTexture(GL_TEXTURE_2D, 0);
+    f->glActiveTexture(GL_TEXTURE2);
+    f->glBindTexture(GL_TEXTURE_3D, 0);
+    f->glActiveTexture(GL_TEXTURE1);
+    f->glBindTexture(GL_TEXTURE_2D, 0);
+    f->glActiveTexture(GL_TEXTURE0);
+    f->glBindTexture(GL_TEXTURE_2D, 0);
+    f->glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+    f->glBindFramebuffer(GL_FRAMEBUFFER, oFbo);
 }
 
 } // namespace volren

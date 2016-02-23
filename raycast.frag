@@ -78,7 +78,8 @@ void main(void)
     vec3 dir = normalize(exit - entry);
     float baseSample = 0.01;
     float maxLength = length(exit - entry);
-    int totalSteps = int(maxLength / stepSize);
+    if (maxLength < stepSize)
+        discard;
     vec2 scalar = vec2(0.0, 0.0); // a segment of the ray, X as the scalar value at the end of the segment, and Y as the scalar value at the beginning of the segment.
     scalar.y = texture(texVolume, entry).r;
     scalar.y = clamp((scalar.y - scalarMin) / (scalarMax - scalarMin), 0.0, 1.0);
