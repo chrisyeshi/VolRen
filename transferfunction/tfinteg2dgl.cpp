@@ -40,6 +40,7 @@ void TFInteg2DGL::integrate(const float *colormap, int resolution, float stepsiz
     f->glGetIntegerv(GL_TEXTURE_1D, &oTex);
     f->glBindTexture(GL_TEXTURE_1D, tex1d->textureId());
     // paint
+    painter.recreateVAO();
     painter.paint("tf1d", 0, "resolution", resolution, "segLen", stepsize);
     // clean
     f->glActiveTexture(GL_TEXTURE0);

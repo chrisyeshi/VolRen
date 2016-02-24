@@ -26,6 +26,9 @@ void main(void)
 		float layerAtten = texture(texRAF, vec3(vf_texLoc, layerTexCoord)).r;
 		acc += layerColor * layerAtten;
 	}
-    o_color = vec4(acc, 1.0);
+    if (acc == vec3(0.0))
+        o_color = vec4(0.0);
+    else
+        o_color = vec4(acc, 1.0);
 }
 

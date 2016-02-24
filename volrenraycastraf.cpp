@@ -110,15 +110,18 @@ void VolRenRaycastRAF::newFBOs(int w, int h)
 {
     texWidth = w;
     texHeight = h;
-//    VolRenRaycast::newFBOs(texWidth, texHeight);
-    cc(cudaGraphicsGLRegisterImage(&entryRes, *_frustum->texEntry(), GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly));
-    cc(cudaGraphicsGLRegisterImage(&exitRes, *_frustum->texExit(), GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly));
     newOutPBO(&rafPBO, &rafRes, texWidth, texHeight, layers);
     newOutPBO(&depPBO, &depRes, texWidth, texHeight, layers);
 }
 
 void VolRenRaycastRAF::raycast()
 {
+    // update entry and exit resources
+    if (entryRes) cc(cudaGraphicsUnregisterResource(entryRes));
+    cc(cudaGraphicsGLRegisterImage(&entryRes, *_frustum->texEntry(), GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly));
+    if (exitRes)  cc(cudaGraphicsUnregisterResource(exitRes));
+    cc(cudaGraphicsGLRegisterImage(&exitRes, *_frustum->texExit(), GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly));
+
     updateColormapResources();
     // TODO: getCUDAMappedArray();
     cudaGraphicsResource_t volRes = this->volume->getCUDAResource();

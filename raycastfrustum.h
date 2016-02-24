@@ -86,6 +86,7 @@ public:
     int progress() const { return _progress; }
     int nProgress() const { return int(std::pow(4, _pgrLevel)); }
     void setProgressLevel(int level);
+    int progressLevel() const { return _pgrLevel; }
     void resetProgress();
     bool advance();
     bool finished() const;
