@@ -6,6 +6,7 @@ uniform sampler2D texExit;
 uniform sampler3D texVolume;
 uniform sampler2D texTFFull;
 uniform sampler2D texTFBack;
+uniform int volFilter;
 uniform vec3 volSize;
 uniform float stepSize;
 uniform float scalarMin;
@@ -23,7 +24,7 @@ layout (location = 0) in vec2 vf_texLoc;
 
 layout (location = 0) out vec4 o_color;
 
-// TODO: tricubic interpolation
+vec3 invVolSize;
 
 vec3 makeGradient(vec3 spot)
 {
@@ -71,16 +72,64 @@ vec4 getLightFactor(vec3 grad, vec3 view)
     return vec4(acc.rgb, 1.0);
 }
 
+float sampleTricubic(vec3 texCoord)
+{
+    vec3 x = texCoord * volSize;
+    vec3 i = floor(x - vec3(0.5)) + vec3(0.5);
+    vec3 a = x - i;
+
+    vec3 a2 = a * a;
+    vec3 a3 = a2 * a;
+
+    // B-spline weighting function
+    float one6th = 1.0 / 6.0;
+    vec3 w0 = one6th * (-a3 + 3.0 * a2 - 3.0 * a + 1.0);
+    vec3 w1 = one6th * (3.0 * a3 - 6.0 * a2 + 4.0);
+    vec3 w2 = one6th * (-3.0 * a3 + 3.0 * a2 + 3.0 * a + 1.0);
+    vec3 w3 = one6th * a3;
+
+    vec3 s0 = w0 + w1;
+    vec3 s1 = w2 + w3;
+
+    vec3 t0 = i - vec3(1.0) + w1 / s0;
+    vec3 t1 = i + vec3(1.0) + w3 / s1;
+
+    t0 *= invVolSize;
+    t1 *= invVolSize;
+
+    return (texture(texVolume, vec3(t0.x, t0.y, t0.z)).r * s0.x * s0.y * s0.z
+          + texture(texVolume, vec3(t1.x, t0.y, t0.z)).r * s1.x * s0.y * s0.z
+          + texture(texVolume, vec3(t0.x, t1.y, t0.z)).r * s0.x * s1.y * s0.z
+          + texture(texVolume, vec3(t1.x, t1.y, t0.z)).r * s1.x * s1.y * s0.z
+          + texture(texVolume, vec3(t0.x, t0.y, t1.z)).r * s0.x * s0.y * s1.z
+          + texture(texVolume, vec3(t1.x, t0.y, t1.z)).r * s1.x * s0.y * s1.z
+          + texture(texVolume, vec3(t0.x, t1.y, t1.z)).r * s0.x * s1.y * s1.z
+          + texture(texVolume, vec3(t1.x, t1.y, t1.z)).r * s1.x * s1.y * s1.z);
+}
+
+float sampleVolume(vec3 loc)
+{
+    if (volFilter == 2)
+    { // tricubic interpolation
+        return sampleTricubic(loc);
+    } else
+    { // trilinear or nearest
+        return texture(texVolume, loc).r;
+    }
+}
+
 void main(void)
 {
+    invVolSize = vec3(1.0) / volSize;
     vec3 entry = texture(texEntry, vf_texLoc).xyz;
     vec3 exit = texture(texExit, vf_texLoc).xyz;
     vec3 dir = normalize(exit - entry);
     float baseSample = 0.01;
     float maxLength = length(exit - entry);
-    int totalSteps = int(maxLength / stepSize);
+    if (maxLength < stepSize)
+        discard;
     vec2 scalar = vec2(0.0, 0.0); // a segment of the ray, X as the scalar value at the end of the segment, and Y as the scalar value at the beginning of the segment.
-    scalar.y = texture(texVolume, entry).r;
+    scalar.y = sampleVolume(entry);
     scalar.y = clamp((scalar.y - scalarMin) / (scalarMax - scalarMin), 0.0, 1.0);
     vec3 spotCurr;
     vec4 lfPrev = getLightFactor(entryGradient(vf_texLoc), dir);
@@ -89,7 +138,7 @@ void main(void)
     for (int step = 1; step * stepSize < maxLength; ++step)
     {
         vec3 spotCurr = entry + dir * (step * stepSize);
-        scalar.x = texture(texVolume, spotCurr).r;
+        scalar.x = sampleVolume(spotCurr);
         scalar.x = clamp((scalar.x - scalarMin) / (scalarMax - scalarMin), 0.0, 1.0);
         vec4 colorFull = texture(texTFFull, scalar);
         vec4 colorBack = texture(texTFBack, scalar);

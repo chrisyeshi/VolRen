@@ -11,5 +11,7 @@
         <file>transferfunction/tfinteg2d.frag</file>
         <file>image/imageraf.vert</file>
         <file>image/imageraf.frag</file>
+        <file>raycastcubeprogressive.frag</file>
+        <file>raycastplaneprogressive.frag</file>
     </qresource>
 </RCC>

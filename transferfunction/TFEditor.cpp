@@ -280,7 +280,7 @@ void TFEditor::updateTF(bool /*drawArray*/, bool colorControl)
     {
         _drawArea->updateImage();
     }
-    repaint();
+    update();
 }
 
 void TFEditor::open()

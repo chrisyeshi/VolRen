@@ -30,7 +30,7 @@ void ImagePBO::initialize()
     f.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     f.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     f.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    f.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, w, h, 0, GL_RGB, GL_FLOAT, NULL);
+    f.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, w, h, 0, GL_RGB, GL_FLOAT, NULL);
     f.glBindTexture(GL_TEXTURE_2D, 0);
     initialized = true;
 }
@@ -39,13 +39,12 @@ void ImagePBO::draw()
 {
     if (!initialized)
         initialize();
-//    QOpenGLFunctions f(QOpenGLContext::currentContext());
     auto f = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_3_3_Core>();
     f->initializeOpenGLFunctions();
-    f->glClear(GL_COLOR_BUFFER_BIT);
+//    f->glClear(GL_COLOR_BUFFER_BIT);
     f->glBindTexture(GL_TEXTURE_2D, tex);
     f->glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pbo);
-    f->glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, GL_RGB, GL_FLOAT, 0);
+    f->glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, GL_RGBA, GL_FLOAT, 0);
     painter.paint("tex", 0);
     f->glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
     f->glBindTexture(GL_TEXTURE_2D, 0);

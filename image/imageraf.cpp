@@ -50,7 +50,7 @@ void ImageRAF::draw()
         this->initialize();
     auto f = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_3_3_Core>();
     f->initializeOpenGLFunctions();
-    glClear(GL_COLOR_BUFFER_BIT);
+//    glClear(GL_COLOR_BUFFER_BIT);
     f->glActiveTexture(GL_TEXTURE0);
     f->glBindTexture(GL_TEXTURE_1D, tf->textureId());
     f->glActiveTexture(GL_TEXTURE1);

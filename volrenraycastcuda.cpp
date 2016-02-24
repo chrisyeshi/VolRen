@@ -120,6 +120,12 @@ std::shared_ptr<ImageAbstract> VolRenRaycastCuda::output() const
 
 void VolRenRaycastCuda::raycast()
 {
+    // update entry and exit resources
+    if (entryRes) cc(cudaGraphicsUnregisterResource(entryRes));
+    cc(cudaGraphicsGLRegisterImage(&entryRes, *_frustum->texEntry(), GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly));
+    if (exitRes)  cc(cudaGraphicsUnregisterResource(exitRes));
+    cc(cudaGraphicsGLRegisterImage(&exitRes,  *_frustum->texExit(),  GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly));
+
     // TODO: getCUDAMappedArray();
     cudaGraphicsResource_t volRes = this->volume->getCUDAResource();
     cudaGraphicsResource_t tfFullRes = this->colormap->cudaResFull();
@@ -165,18 +171,13 @@ void VolRenRaycastCuda::raycast()
 void VolRenRaycastCuda::updateCUDAResources()
 {
     QOpenGLFunctions f(QOpenGLContext::currentContext());
-    // update entry and exit resources
-    if (entryRes) cc(cudaGraphicsUnregisterResource(entryRes));
-    cc(cudaGraphicsGLRegisterImage(&entryRes, *_frustum->texEntry(), GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly));
-    if (exitRes)  cc(cudaGraphicsUnregisterResource(exitRes));
-    cc(cudaGraphicsGLRegisterImage(&exitRes,  *_frustum->texExit(),  GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly));
     // update output PBO and CUDA resource
     // clean up
     if (0 != outPBO) f.glDeleteBuffers(1, &outPBO);
     // pbo
     f.glGenBuffers(1, &outPBO);
     f.glBindBuffer(GL_PIXEL_UNPACK_BUFFER, outPBO);
-    f.glBufferData(GL_PIXEL_UNPACK_BUFFER, 3 * _frustum->texWidth() * _frustum->texHeight() * sizeof(float), NULL, GL_STREAM_COPY);
+    f.glBufferData(GL_PIXEL_UNPACK_BUFFER, 4 * _frustum->texWidth() * _frustum->texHeight() * sizeof(float), NULL, GL_STREAM_COPY);
     f.glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
     // register cuda resource
     if (outRes) cc(cudaGraphicsUnregisterResource(outRes));

@@ -26,7 +26,7 @@ void ImageFBO::draw()
 {
     if (!initialized)
         initialize();
-    glClear(GL_COLOR_BUFFER_BIT);
+//    glClear(GL_COLOR_BUFFER_BIT);
     glBindTexture(GL_TEXTURE_2D, fbo->texture());
     painter.paint("tex", 0);
     glBindTexture(GL_TEXTURE_2D, 0);

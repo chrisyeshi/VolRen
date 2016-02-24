@@ -110,6 +110,14 @@ __global__ static void castray(int tfWidth, int tfHeight, float stepSize,
     float3 exit = make_float3(tex2D(exitTex, x + 0.5f, y + 0.5f));
     float3 dir = normalize(exit - entry);
     float maxLength = length(exit - entry);
+    if (maxLength < stepSize)
+    {
+        outPtr[4 * (texWidth * y + x) + 0] = 0.f;
+        outPtr[4 * (texWidth * y + x) + 1] = 0.f;
+        outPtr[4 * (texWidth * y + x) + 2] = 0.f;
+        outPtr[4 * (texWidth * y + x) + 3] = 0.f;
+        return;
+    }
     float2 scalar = make_float2(0.f, 0.f);
     scalar.y = tex3D(volTex, entry.x * volWidth, entry.y * volHeight, entry.z * volDepth);
     scalar.y = clamp(float((scalar.y - scalarMin) / (scalarMax - scalarMin)), 0.f, 1.f);
@@ -132,9 +140,10 @@ __global__ static void castray(int tfWidth, int tfHeight, float stepSize,
         scalar.y = scalar.x;
         lfPrev = lfCurr;
     }
-    outPtr[3 * (texWidth * y + x) + 0] = acc.x;
-    outPtr[3 * (texWidth * y + x) + 1] = acc.y;
-    outPtr[3 * (texWidth * y + x) + 2] = acc.z;
+    outPtr[4 * (texWidth * y + x) + 0] = acc.x;
+    outPtr[4 * (texWidth * y + x) + 1] = acc.y;
+    outPtr[4 * (texWidth * y + x) + 2] = acc.z;
+    outPtr[4 * (texWidth * y + x) + 3] = 1.f;
 }
 
 void cudacast(int ivolWidth, int ivolHeight, int ivolDepth, cudaArray* volArr,
