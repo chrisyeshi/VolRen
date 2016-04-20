@@ -48,6 +48,7 @@ vec3 entryGradient(vec2 viewSpot)
     return cross(top - bottom, right - left);
 }
 
+// TODO: separate into getDiffuseFactor and getSpecularFactor
 vec4 getLightFactor(vec3 grad, vec3 view)
 {
     if (nLights == 0)
@@ -62,9 +63,11 @@ vec4 getLightFactor(vec3 grad, vec3 view)
         vec3 ks = lights[i].specular;
         float shininess = lights[i].shininess;
         vec3 L = normalize(-lights[i].direction);
-        vec3 R = normalize(-reflect(L, N));
+        vec3 R = normalize(reflect(-L, N));
         vec3 diffuse = kd * max(dot(L, N), 0.f);
+//        vec3 diffuse = kd * abs(dot(L, N));
         vec3 specular = ks * pow(max(dot(R, V), 0.f), shininess);
+//        vec3 specular = ks * pow(abs(dot(R, V)), shininess);
         vec3 cf = ka + diffuse + specular;
         float af = 1.f;
         acc += vec4(cf, af);
@@ -132,7 +135,7 @@ void main(void)
     scalar.y = sampleVolume(entry);
     scalar.y = clamp((scalar.y - scalarMin) / (scalarMax - scalarMin), 0.0, 1.0);
     vec3 spotCurr;
-    vec4 lfPrev = getLightFactor(entryGradient(vf_texLoc), dir);
+    vec4 lfPrev = getLightFactor(normalize(entryGradient(vf_texLoc)), dir);
     vec4 lfCurr;
     vec4 acc = vec4(0.0);
     for (int step = 1; step * stepSize < maxLength; ++step)
@@ -143,7 +146,7 @@ void main(void)
         vec4 colorFull = texture(texTFFull, scalar);
         vec4 colorBack = texture(texTFBack, scalar);
         vec4 colorFront = colorFull - colorBack;
-        lfCurr = getLightFactor(makeGradient(spotCurr), dir);
+        lfCurr = getLightFactor(normalize(makeGradient(spotCurr)), dir);
         acc += (colorBack * lfCurr + colorFront * lfPrev) * (1.0 - acc.a);
         if (acc.a > 0.999)
             break;
