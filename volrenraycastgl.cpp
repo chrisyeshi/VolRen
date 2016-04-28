@@ -179,6 +179,7 @@ void VolRenRaycastGL::raycast()
                   "texTFBack", 4,
                   "volFilter", static_cast<int>(volume->getFilter()),
                   "volSize", QVector3D(volume->w(), volume->h(), volume->d()),
+                  "baseSize", colormap->basesize(),
                   "stepSize", colormap->stepsize(),
                   "scalarMin", scalarMin,
                   "scalarMax", scalarMax,

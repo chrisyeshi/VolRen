@@ -18,7 +18,7 @@ public:
     virtual ~TFInteg2DCUDA();
 
 public:
-    virtual void integrate(const float* colormap, int resolution, float stepsize);
+    virtual void integrate(const float* colormap, int resolution, float basesize, float stepsize);
     virtual QSharedPointer<QOpenGLTexture> getTexFull() const { return texFull; }
     virtual QSharedPointer<QOpenGLTexture> getTexBack() const { return texBack; }
 

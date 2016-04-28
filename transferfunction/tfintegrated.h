@@ -17,21 +17,20 @@ class TFIntegrated : public BASE
 public:
     TFIntegrated(Method method)
       : BASE(method), tfInteg(new TFIntegrater())
-      , tf(1024, 1024), tfFilter(IColormap::Filter_Linear), stepsize(0.01f) {}
+      , tf(1024, 1024), tfFilter(IColormap::Filter_Linear) {}
 
     virtual void initializeGL()
     {
         BASE::initializeGL();
-        setTF(tf, tfInteg->isPreinteg(), stepsize, tfFilter);
+        setTF(tf, tfInteg->isPreinteg(), tfFilter);
     }
 
-    virtual void setTF(const mslib::TF& tf, bool preinteg, float stepsize, IColormap::Filter filter)
+    virtual void setTF(const mslib::TF& tf, bool preinteg, IColormap::Filter filter)
     {
         this->tf = tf;
         this->tfFilter = filter;
-        this->stepsize = stepsize;
         tfInteg->convertTo(preinteg);
-        tfInteg->integrate(tf.bufPtr(), tf.nColors(), stepsize);
+        tfInteg->integrate(tf.bufPtr(), tf.nColors(), tf.basesize(), tf.stepsize());
         static std::map<IColormap::Filter, QOpenGLTexture::Filter> vr2qt
                 = { { IColormap::Filter_Linear, QOpenGLTexture::Linear }
                   , { IColormap::Filter_Nearest, QOpenGLTexture::Nearest } };
@@ -46,7 +45,6 @@ protected:
     std::unique_ptr<TFIntegrater> tfInteg;
     mslib::TF tf;
     IColormap::Filter tfFilter;
-    float stepsize;
 
 private:
     TFIntegrated(); // Not implemented!!!

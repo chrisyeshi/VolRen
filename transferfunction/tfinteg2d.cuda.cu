@@ -2,12 +2,11 @@
 #include <iostream>
 #include "../cutil_math.h"
 
-__global__ void tfIntegrate2D_kernel(float* tf1d, float segLen, float* tf2dfull, float* tf2dback)
+__global__ void tfIntegrate2D_kernel(float* tf1d, float basesize, float segLen, float* tf2dfull, float* tf2dback)
 {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
     // integrate from y to x with y being the beginning of the ray segment and x being the end of the ray segment
-    const float baseSample = 0.01;
     int dirSteps = x - y;
     int steps = (0 == dirSteps) ? 1 : abs(dirSteps);
     int dir = dirSteps / steps;
@@ -24,7 +23,7 @@ __global__ void tfIntegrate2D_kernel(float* tf1d, float segLen, float* tf2dfull,
         spotColor.z = tf1d[4 * tfIdx + 2];
         spotColor.w = tf1d[4 * tfIdx + 3];
         // adjust
-        spotColor.w = 1.f - pow(1.f - spotColor.w, stepsize / baseSample);
+        spotColor.w = 1.f - pow(1.f - spotColor.w, stepsize / basesize);
         spotColor.x *= spotColor.w;
         spotColor.y *= spotColor.w;
         spotColor.z *= spotColor.w;
@@ -51,7 +50,7 @@ __global__ void tfIntegrate2D_kernel(float* tf1d, float segLen, float* tf2dfull,
     tf2dback[4 * idx + 3] = back.w;
 }
 
-void tfIntegrate2D(const float* tf1d, int size, float stepsize, float* tf2dfull, float* tf2dback)
+void tfIntegrate2D(const float* tf1d, int size, float basesize, float stepsize, float* tf2dfull, float* tf2dback)
 {
     const int maxBlockSize = 16;
     dim3 dimBlock;
@@ -74,7 +73,7 @@ void tfIntegrate2D(const float* tf1d, int size, float stepsize, float* tf2dfull,
     cudaMalloc((void**)&devTF2dBack, size2d);
     cudaMemcpy(devTF1d, tf1d, size1d, cudaMemcpyHostToDevice);
 
-    tfIntegrate2D_kernel<<<dimGrid, dimBlock>>>(devTF1d, stepsize, devTF2dFull, devTF2dBack);
+    tfIntegrate2D_kernel<<<dimGrid, dimBlock>>>(devTF1d, basesize, stepsize, devTF2dFull, devTF2dBack);
 
     cudaMemcpy(tf2dfull, devTF2dFull, size2d, cudaMemcpyDeviceToHost);
     cudaMemcpy(tf2dback, devTF2dBack, size2d, cudaMemcpyDeviceToHost);

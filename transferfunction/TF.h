@@ -141,9 +141,11 @@ public:
 // Interface from IColormap
 public:
     void setPreIntegrate(bool preinteg);
+    void setBasesize(float basesize) { _basesize = basesize; _isUpdatedGL = false; }
     void setStepsize(float stepsize) { _stepsize = stepsize; _isUpdatedGL = false; }
     void setFilter(yy::volren::IColormap::Filter filter) { _filter = filter; _isUpdatedGL = false; }
     virtual const std::vector<yy::volren::Rgba>& buffer() const;
+    virtual float basesize() const { return _basesize; }
     virtual float stepsize() const { return _stepsize; }
     virtual bool preintegrate() const;
     virtual yy::volren::IColormap::Filter filter() const { return _filter; }
@@ -164,6 +166,7 @@ private:
     int _blendMode;
     std::vector<TFColorControl> _colorControls;     // color control points
     std::vector<TFGaussianObject> _gaussianObjects;
+    float _basesize;
     float _stepsize;
     bool _preintegrate;
     yy::volren::IColormap::Filter _filter;

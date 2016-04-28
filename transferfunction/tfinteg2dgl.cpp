@@ -19,7 +19,7 @@ TFInteg2DGL::~TFInteg2DGL()
 
 }
 
-void TFInteg2DGL::integrate(const float *colormap, int resolution, float stepsize)
+void TFInteg2DGL::integrate(const float *colormap, int resolution, float basesize, float stepsize)
 {
     if (!texFull || resolution != texFull->width())
         newResources(resolution);
@@ -41,7 +41,7 @@ void TFInteg2DGL::integrate(const float *colormap, int resolution, float stepsiz
     f->glBindTexture(GL_TEXTURE_1D, tex1d->textureId());
     // paint
     painter.recreateVAO();
-    painter.paint("tf1d", 0, "resolution", resolution, "segLen", stepsize);
+    painter.paint("tf1d", 0, "resolution", resolution, "basesize", basesize, "segLen", stepsize);
     // clean
     f->glActiveTexture(GL_TEXTURE0);
     f->glBindTexture(GL_TEXTURE_1D, oTex);

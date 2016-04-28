@@ -15,7 +15,7 @@ TFInteg1D::~TFInteg1D()
 
 }
 
-void TFInteg1D::integrate(const float *colormap, int resolution, float stepsize)
+void TFInteg1D::integrate(const float *colormap, int resolution, float basesize, float stepsize)
 {
     if (!texFull || resolution != texFull->width())
     {
@@ -31,7 +31,6 @@ void TFInteg1D::integrate(const float *colormap, int resolution, float stepsize)
         texBack->allocateStorage();
         data.resize(resolution * 4);
     }
-    const float baseSample = 0.01f;
     for (int i = 0; i < resolution; ++i)
     {
         // sample
@@ -40,7 +39,7 @@ void TFInteg1D::integrate(const float *colormap, int resolution, float stepsize)
         float spotB = colormap[4 * i + 2];
         float spotA = colormap[4 * i + 3];
         // adjust
-        float adjustA = 1.f - std::pow(1.f - spotA, stepsize / baseSample);
+        float adjustA = 1.f - std::pow(1.f - spotA, stepsize / basesize);
         float adjustR = spotR * adjustA;
         float adjustG = spotG * adjustA;
         float adjustB = spotB * adjustA;

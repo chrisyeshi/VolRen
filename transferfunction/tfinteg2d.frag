@@ -3,6 +3,7 @@
 
 uniform sampler1D tf1d;
 uniform int resolution;
+uniform float basesize;
 uniform float segLen;
 
 layout (location = 0) in vec2 vf_texLoc;
@@ -15,7 +16,6 @@ void main(void)
     int x = int(gl_FragCoord.x);
     int y = int(gl_FragCoord.y);
     // integrate from y to x with y being the beginning of the ray segment and x being the end of the ray segment
-    const float baseSample = 0.01;
     int dirSteps = x - y;
     int steps = (0 == dirSteps) ? 1 : abs(dirSteps);
     int dir = dirSteps / steps;
@@ -29,7 +29,7 @@ void main(void)
         // sample
         spotColor = texture(tf1d, float(tfIdx) / float(resolution - 1));
         // adjust
-        spotColor.a = 1.0 - pow(1.0 - spotColor.a, stepsize / baseSample);
+        spotColor.a = 1.0 - pow(1.0 - spotColor.a, stepsize / basesize);
         spotColor.rgb *= spotColor.a;
         // weighted for front and back samples
         float weightBack = (steps - 1 == 0) ? 0.0 : (float(s) / float(steps - 1));

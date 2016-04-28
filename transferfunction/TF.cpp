@@ -46,6 +46,7 @@ TF::TF(int resolution)
   , _alphaArray(resolution)
   , _blendMode(0)
   , _isUpdatedGL(false)
+  , _basesize(0.01f)
   , _stepsize(0.01f)
   , _preintegrate(true)
   , _filter(Filter_Linear)
@@ -339,7 +340,7 @@ void TF::tfIntegrate() const
     if (!_tfInteg)
         _tfInteg = std::make_shared<yy::volren::TFIntegrater>();
     _tfInteg->convertTo(_preintegrate);
-    _tfInteg->integrate(reinterpret_cast<const float*>(_colorMap.data()), _colorMap.size(), _stepsize);
+    _tfInteg->integrate(reinterpret_cast<const float*>(_colorMap.data()), _colorMap.size(), _basesize, _stepsize);
     static std::map<Filter, QOpenGLTexture::Filter> vr2qt
                 = { { Filter_Linear, QOpenGLTexture::Linear }
                   , { Filter_Nearest, QOpenGLTexture::Nearest } };

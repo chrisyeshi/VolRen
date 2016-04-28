@@ -58,6 +58,7 @@ class IColormap
 public:
     enum Filter { Filter_Linear, Filter_Nearest };
     virtual const std::vector<Rgba>& buffer() const = 0;
+    virtual float basesize() const = 0;
     virtual float stepsize() const = 0;
     virtual bool preintegrate() const = 0;
     virtual Filter filter() const = 0;
@@ -103,12 +104,14 @@ public:
     	_buffer[2] = Rgba(1.0f, 0.0f, 0.1f, 1.0f);
     }
 	virtual const std::vector<Rgba>& buffer() const { return _buffer; }
+    virtual float basesize() const { return _basesize; }
 	virtual float stepsize() const { return _stepsize; }
 	virtual bool preintegrate() const { return _preintegrate; }
 	virtual Filter filter() const { return _filter; }
 
 private:
 	std::vector<Rgba> _buffer;
+    float _basesize;
 	float _stepsize;
 	bool _preintegrate;
 	Filter _filter;
@@ -122,6 +125,7 @@ public:
 
 public:
 	virtual const std::vector<Rgba>& buffer() const { return _colormap->buffer(); }
+    virtual float basesize() const { return _colormap->basesize(); }
 	virtual float stepsize() const { return _colormap->stepsize(); }
 	virtual bool preintegrate() const { return _tfInteg->isPreinteg(); }
 	virtual Filter filter() const { return _colormap->filter(); }
@@ -146,7 +150,7 @@ private:
 		if (_tfInteg)
 			return;
 		_tfInteg = std::make_shared<yy::volren::TFIntegrater>(true);
-		_tfInteg->integrate(reinterpret_cast<const float*>(_colormap->buffer().data()), _colormap->buffer().size(), _colormap->stepsize());
+        _tfInteg->integrate(reinterpret_cast<const float*>(_colormap->buffer().data()), _colormap->buffer().size(), _colormap->basesize(), _colormap->stepsize());
 		_tfInteg->getTexFull()->setMinMagFilters(QOpenGLTexture::Linear, QOpenGLTexture::Linear);
 		_tfInteg->getTexFull()->setWrapMode(QOpenGLTexture::ClampToEdge);
 		_tfInteg->getTexBack()->setMinMagFilters(QOpenGLTexture::Linear, QOpenGLTexture::Linear);
@@ -182,6 +186,7 @@ public:
 
 public:
 	virtual const std::vector<Rgba>& buffer() const { return _colormap->buffer(); }
+    virtual float basesize() const { return _colormap->basesize(); }
 	virtual float stepsize() const { return _colormap->stepsize(); }
 	virtual bool preintegrate() const { return _colormap->preintegrate(); }
 	virtual Filter filter() const { return _colormap->filter(); }

@@ -20,11 +20,11 @@ TFInteg2DCUDA::~TFInteg2DCUDA()
 
 }
 
-void TFInteg2DCUDA::integrate(const float *colormap, int resolution, float stepsize)
+void TFInteg2DCUDA::integrate(const float *colormap, int resolution, float basesize, float stepsize)
 {
     if (!texFull || resolution != texFull->width())
         newResources(resolution);
-    tfIntegrate2D(colormap, resolution, stepsize, dataFull.data(), dataBack.data());
+    tfIntegrate2D(colormap, resolution, basesize, stepsize, dataFull.data(), dataBack.data());
     texFull->setData(QOpenGLTexture::RGBA, QOpenGLTexture::Float32, dataFull.data());
     texBack->setData(QOpenGLTexture::RGBA, QOpenGLTexture::Float32, dataBack.data());
 }

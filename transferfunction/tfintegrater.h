@@ -12,7 +12,7 @@ class ITFIntegrater
 {
 public:
     virtual ~ITFIntegrater() {}
-    virtual void integrate(const float* colormap, int resolution, float stepsize) = 0;
+    virtual void integrate(const float* colormap, int resolution, float basesize, float stepsize) = 0;
     virtual QSharedPointer<QOpenGLTexture> getTexFull() const = 0;
     virtual QSharedPointer<QOpenGLTexture> getTexBack() const = 0;
 };
@@ -24,7 +24,7 @@ public:
     TFIntegrater(bool preinteg);
     virtual ~TFIntegrater() {}
 
-    virtual void integrate(const float* colormap, int resolution, float stepsize) { return integ->integrate(colormap, resolution, stepsize); }
+    virtual void integrate(const float* colormap, int resolution, float basesize, float stepsize) { return integ->integrate(colormap, resolution, basesize, stepsize); }
     virtual QSharedPointer<QOpenGLTexture> getTexFull() const { return integ->getTexFull(); }
     virtual QSharedPointer<QOpenGLTexture> getTexBack() const { return integ->getTexBack(); }
 
