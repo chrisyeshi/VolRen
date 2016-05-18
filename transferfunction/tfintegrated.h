@@ -17,7 +17,7 @@ class TFIntegrated : public BASE
 public:
     TFIntegrated(Method method)
       : BASE(method), tfInteg(new TFIntegrater())
-      , tf(1024, 1024), tfFilter(IColormap::Filter_Linear) {}
+      , tf(1024), tfFilter(IColormap::Filter_Linear) {}
 
     virtual void initializeGL()
     {
