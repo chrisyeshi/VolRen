@@ -1,6 +1,9 @@
 #ifndef IMAGEABSTRACT_H
 #define IMAGEABSTRACT_H
 
+#include <stdexcept>
+#include <vector>
+
 namespace yy {
 namespace volren {
 
@@ -15,6 +18,9 @@ public:
 	Type type() const { return _type; }
     virtual void initialize() = 0;
     virtual void draw() = 0;
+    virtual std::vector<char> data() const { throw std::invalid_argument("Not implemented yet."); }
+    virtual int width() const { throw std::invalid_argument("Not implemented yet!"); }
+    virtual int height() const { throw std::invalid_argument("Not implemented yet!"); }
 
 private:
 	Type _type;

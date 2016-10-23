@@ -45,6 +45,9 @@ public:
     virtual void render() = 0;
     virtual std::shared_ptr<ImageAbstract> output() const = 0;
 
+public:
+    std::vector<float> scalarRange() const { return { scalarMin, scalarMax }; }
+
 protected:
     float scalarMin, scalarMax;
     std::vector<Light> lights;

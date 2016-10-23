@@ -18,6 +18,7 @@ public:
 
     virtual void initialize();
     virtual void draw();
+    virtual std::vector<char> data() const;
     GLuint texture() const { return tex; }
 
 private:
