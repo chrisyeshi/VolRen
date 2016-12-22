@@ -19,11 +19,23 @@ RaycastFrustum::~RaycastFrustum()
 
 }
 
+std::pair<QVector3D, QVector3D> RaycastFrustum::clipBox() const
+{
+    if (!_clipBox) {
+        static std::pair<QVector3D, QVector3D> box;
+        box.first = QVector3D(0.f, 0.f, 0.f);
+        box.second = QVector3D(_volWidth, _volHeight, _volDepth);
+        return box;
+    }
+    return *_clipBox;
+}
+
 QMatrix4x4 RaycastFrustum::matModel() const
 {
     static QMatrix4x4 mat;
     mat.setToIdentity();
-    mat.scale(_volWidth, _volHeight, _volDepth);
+    mat.translate(clipBox().first);
+    mat.scale(clipBox().second - clipBox().first);
     return mat;
 }
 
@@ -41,6 +53,18 @@ void RaycastFrustum::setVolSize(int w, int h, int d)
     _volWidth = w;
     _volHeight = h;
     _volDepth = d;
+    _isEntryUpdated = false;
+    _isExitUpdated = false;
+}
+
+void RaycastFrustum::setClipBox(const QVector3D& bmin, const QVector3D& bmax)
+{
+    if (!_clipBox) {
+        _clipBox = std::unique_ptr<std::pair<QVector3D, QVector3D>>(
+                new std::pair<QVector3D, QVector3D>());
+    }
+    _clipBox->first = bmin;
+    _clipBox->second = bmax;
     _isEntryUpdated = false;
     _isExitUpdated = false;
 }
@@ -161,6 +185,17 @@ void RaycastFrustum::newFBO(int w, int h, std::shared_ptr<GLuint> *fbo, std::sha
     }
 }
 
+QMatrix4x4 RaycastFrustum::matClip() const
+{
+    auto clipBox = this->clipBox();
+    static QMatrix4x4 mat;
+    mat.setToIdentity();
+    mat.scale(1.0f / _volWidth, 1.0f / _volHeight, 1.0f / _volDepth);
+    mat.translate(clipBox.first);
+    mat.scale(clipBox.second - clipBox.first);
+    return mat;
+}
+
 void RaycastFrustum::makeEntry() const
 {
     // near plane geometry
@@ -190,7 +225,8 @@ void RaycastFrustum::makeEntry() const
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     _pCube->paint("mvp", matProj() * matView() * matModel(),
-                  "volDim", QVector3D(_volWidth, _volHeight, _volDepth));
+                  "volDim", QVector3D(_volWidth, _volHeight, _volDepth),
+                  "matClip", matClip());
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
     // reset GL states
@@ -228,7 +264,8 @@ void RaycastFrustum::makeExit() const
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);
     _pCube->paint("mvp", matProj() * matView() * matModel(),
-                  "volDim", QVector3D(_volWidth, _volHeight, _volDepth));
+                  "volDim", QVector3D(_volWidth, _volHeight, _volDepth),
+                  "matClip", matClip());
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
     // reset GL states
@@ -325,19 +362,11 @@ void FrustumProgressive::makeEntry() const
     glCullFace(GL_BACK);
     _pCube->paint("mvp", matProj() * matView() * matModel(),
                   "volDim", QVector3D(_volWidth, _volHeight, _volDepth),
+                  "matClip", matClip(),
                   "progress", _progress,
                   "pgrLevel", _pgrLevel);
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
-
-//    std::unique_ptr<GLubyte[]> pixels(new GLubyte [_texWidth * _texHeight * 4]);
-//    glReadPixels(0, 0, _texWidth, _texHeight, GL_RGBA, GL_UNSIGNED_BYTE, pixels.get());
-//    QImage image(pixels.get(), _texWidth, _texHeight, QImage::Format_RGBA8888);
-//    static QLabel label;
-//    label.resize(_texWidth, _texHeight);
-//    label.setPixmap(QPixmap::fromImage(image.mirrored()));
-//    label.show();
-
     // reset GL states
     f.glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
     f.glBindFramebuffer(GL_FRAMEBUFFER, oFBO);
@@ -376,19 +405,11 @@ void FrustumProgressive::makeExit() const
     glCullFace(GL_FRONT);
     _pCube->paint("mvp", matProj() * matView() * matModel(),
                   "volDim", QVector3D(_volWidth, _volHeight, _volDepth),
+                  "matClip", matClip(),
                   "progress", _progress,
                   "pgrLevel", _pgrLevel);
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
-
-//    std::unique_ptr<GLubyte[]> pixels(new GLubyte [_texWidth * _texHeight * 4]);
-//    glReadPixels(0, 0, _texWidth, _texHeight, GL_RGBA, GL_UNSIGNED_BYTE, pixels.get());
-//    QImage image(pixels.get(), _texWidth, _texHeight, QImage::Format_RGBA8888);
-//    static QLabel label;
-//    label.resize(_texWidth, _texHeight);
-//    label.setPixmap(QPixmap::fromImage(image.mirrored()));
-//    label.show();
-
     // reset GL states
     f.glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
     f.glBindFramebuffer(GL_FRAMEBUFFER, oFBO);

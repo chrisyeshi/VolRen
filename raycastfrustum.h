@@ -17,12 +17,17 @@ public:
     virtual int volWidth() const = 0;
     virtual int volHeight() const = 0;
     virtual int volDepth() const = 0;
+    virtual std::pair<QVector3D, QVector3D> clipBox() const = 0;
     virtual QMatrix4x4 matModel() const = 0;
     virtual QMatrix4x4 matView() const = 0;
     virtual QMatrix4x4 matProj() const = 0;
 
     virtual void setTexSize(int w, int h) = 0;
+    /// TODO: consider making a volume config class.
     virtual void setVolSize(int w, int h, int d) = 0;
+    /// TODO: consider putting the arguments into a bounding box class.
+    /// TODO: consider putting this in a derived interface class.
+    virtual void setClipBox(const QVector3D& bmin, const QVector3D& bmax) = 0;
     virtual void setMatView(const QMatrix4x4& matView) = 0;
     virtual void setMatProj(const QMatrix4x4& matProj) = 0;
     virtual void setMatVP(const QMatrix4x4& matView, const QMatrix4x4& matProj) { setMatView(matView); setMatProj(matProj); }
@@ -42,12 +47,14 @@ public:
     virtual int volWidth() const { return _volWidth; }
     virtual int volHeight() const { return _volHeight; }
     virtual int volDepth() const { return _volDepth; }
+    virtual std::pair<QVector3D, QVector3D> clipBox() const;
     virtual QMatrix4x4 matModel() const;
     virtual QMatrix4x4 matView() const { return _matView; }
     virtual QMatrix4x4 matProj() const { return _matProj; }
 
     virtual void setTexSize(int w, int h);
     virtual void setVolSize(int w, int h, int d);
+    virtual void setClipBox(const QVector3D& bmin, const QVector3D& bmax);
     virtual void setMatView(const QMatrix4x4 &matView);
     virtual void setMatProj(const QMatrix4x4 &matProj);
 
@@ -58,6 +65,7 @@ protected:
     virtual void initializeGL() const;
     virtual void makeEntry() const;
     virtual void makeExit() const;
+    QMatrix4x4 matClip() const;
 
 protected:
     const int _defaultFBOSize = 480;
@@ -70,10 +78,12 @@ protected:
     QMatrix4x4 _matView, _matProj;
     int _texWidth, _texHeight;
     int _volWidth, _volHeight, _volDepth;
+    std::unique_ptr<std::pair<QVector3D, QVector3D>> _clipBox;
 
 private:
     void newFBOs() const;
-    void newFBO(int w, int h, std::shared_ptr<GLuint>* fbo, std::shared_ptr<GLuint>* tex, std::shared_ptr<GLuint>* ren) const;
+    void newFBO(int w, int h, std::shared_ptr<GLuint>* fbo,
+            std::shared_ptr<GLuint>* tex, std::shared_ptr<GLuint>* ren) const;
 };
 
 class FrustumProgressive : public RaycastFrustum

@@ -244,6 +244,18 @@ void TF::updateColorMap()
             if (_colorMap[i].a() < _gaussianObjects[j].alphaArray[i])       // maximum
                 _colorMap[i].a() = _gaussianObjects[j].alphaArray[i];
     }
+
+    for (unsigned int iIso = 0; iIso < _isoValues.size(); ++iIso) {
+        auto iso = _isoValues[iIso];
+        int midIndex = iso * (resolution - 1);
+        float alpha = 0.99f;
+        const int thickness = 3;
+        int startIndex = std::max(0, midIndex - thickness / 2);
+        int endIndex = std::min(resolution - 1, midIndex + (thickness - thickness / 2));
+        for (int index = startIndex; index <= endIndex; ++index)
+            _colorMap[index].a() = std::max(alpha, _colorMap[index].a());
+    }
+
     _isUpdatedGL = false;
 }
 
@@ -284,7 +296,7 @@ const std::vector<yy::volren::Rgba>& TF::buffer() const
 
 bool TF::preintegrate() const
 {
-    return _preintegrate;\
+    return _preintegrate;
 }
 
 QSharedPointer<QOpenGLTexture> TF::texFull() const

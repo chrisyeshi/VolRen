@@ -47,6 +47,7 @@ public:
 
 public:
     std::vector<float> scalarRange() const { return { scalarMin, scalarMax }; }
+    const std::vector<Light>& getLights() const { return lights; }
 
 protected:
     float scalarMin, scalarMax;

@@ -122,12 +122,15 @@ public:
     void removeColorControl(int index);
     TFColorControl& insertColorControl(float value);
     void clearColorControls() { _colorControls.clear(); }
-    
+
     int gaussianObjectCount() const { return (int)_gaussianObjects.size(); }
     TFGaussianObject &gaussianObject(int index) { return _gaussianObjects[index]; }
     const TFGaussianObject &gaussianObject(int index) const { return _gaussianObjects[index]; }
     void addGaussianObject(float mean, float sigma, float heightFactor);
     void removeGaussianObject(int index);
+
+    void setIsoValues(const std::vector<float>& isos) { _isoValues = isos; }
+    const std::vector<float>& isoValues() const { return _isoValues; }
 
     void updateColorMap();
 
@@ -166,6 +169,7 @@ private:
     int _blendMode;
     std::vector<TFColorControl> _colorControls;     // color control points
     std::vector<TFGaussianObject> _gaussianObjects;
+    std::vector<float> _isoValues;
     float _basesize;
     float _stepsize;
     bool _preintegrate;
