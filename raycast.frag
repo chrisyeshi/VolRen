@@ -51,6 +51,8 @@ vec3 entryGradient(vec2 viewSpot)
 // TODO: separate into getDiffuseFactor and getSpecularFactor
 vec4 getLightFactor(vec3 grad, vec3 view)
 {
+    if (length(grad) == 0.0)
+        return vec4(1.0, 1.0, 1.0, 1.0);
     if (nLights == 0)
         return vec4(1.0, 1.0, 1.0, 1.0);
     vec3 V = normalize(-view);
@@ -64,10 +66,10 @@ vec4 getLightFactor(vec3 grad, vec3 view)
         float shininess = lights[i].shininess;
         vec3 L = normalize(-lights[i].direction);
         vec3 R = normalize(reflect(-L, N));
-        vec3 diffuse = kd * max(dot(L, N), 0.f);
-//        vec3 diffuse = kd * abs(dot(L, N));
-        vec3 specular = ks * pow(max(dot(R, V), 0.f), shininess);
-//        vec3 specular = ks * pow(abs(dot(R, V)), shininess);
+//        vec3 diffuse = kd * max(dot(L, N), 0.f);
+        vec3 diffuse = kd * abs(dot(L, N));
+//        vec3 specular = ks * pow(max(dot(R, V), 0.f), shininess);
+        vec3 specular = ks * pow(abs(dot(R, V)), shininess);
         vec3 cf = ka + diffuse + specular;
         float af = 1.f;
         acc += vec4(cf, af);
@@ -146,7 +148,7 @@ void main(void)
         vec4 colorFull = texture(texTFFull, scalar);
         vec4 colorBack = texture(texTFBack, scalar);
         vec4 colorFront = colorFull - colorBack;
-        lfCurr = getLightFactor(normalize(makeGradient(spotCurr)), dir);
+        lfCurr = getLightFactor(makeGradient(spotCurr), dir);
         acc += (colorBack * lfCurr + colorFront * lfPrev) * (1.0 - acc.a);
         if (acc.a > 0.999)
             break;
