@@ -100,7 +100,7 @@ void TFInteg2DGL::newFbo()
         QOpenGLContext::currentContext()->functions()->glGenFramebuffers(1, fboPtr);
         return fboPtr;
     }(), [](GLuint* fboPtr){
-        QOpenGLContext::currentContext()->functions()->glDeleteFramebuffers(1, fboPtr);
+        QOpenGLContext::globalShareContext()->functions()->glDeleteFramebuffers(1, fboPtr);
     });
     GLint oFbo;
     f->glGetIntegerv(GL_FRAMEBUFFER_BINDING, &oFbo);

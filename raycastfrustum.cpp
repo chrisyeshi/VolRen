@@ -114,7 +114,7 @@ void RaycastFrustum::newFBO(int w, int h, std::shared_ptr<GLuint> *fbo, std::sha
         QOpenGLContext::currentContext()->functions()->glGenTextures(1, texPtr);
         return texPtr;
     }(), [](GLuint* texPtr){
-        QOpenGLContext::currentContext()->functions()->glDeleteTextures(1, texPtr);
+        QOpenGLContext::globalShareContext()->functions()->glDeleteTextures(1, texPtr);
     });
     f.glGetIntegerv(GL_TEXTURE_BINDING_2D, &oTex);
     f.glBindTexture(GL_TEXTURE_2D, **tex);
@@ -130,7 +130,7 @@ void RaycastFrustum::newFBO(int w, int h, std::shared_ptr<GLuint> *fbo, std::sha
         QOpenGLContext::currentContext()->functions()->glGenRenderbuffers(1, renPtr);
         return renPtr;
     }(), [](GLuint* renPtr){
-        QOpenGLContext::currentContext()->functions()->glDeleteRenderbuffers(1, renPtr);
+        QOpenGLContext::globalShareContext()->functions()->glDeleteRenderbuffers(1, renPtr);
     });
     f.glGetIntegerv(GL_RENDERBUFFER_BINDING, &oRen);
     f.glBindRenderbuffer(GL_RENDERBUFFER, **ren);
@@ -142,7 +142,7 @@ void RaycastFrustum::newFBO(int w, int h, std::shared_ptr<GLuint> *fbo, std::sha
         QOpenGLContext::currentContext()->functions()->glGenFramebuffers(1, fboPtr);
         return fboPtr;
     }(), [](GLuint* fboPtr){
-        QOpenGLContext::currentContext()->functions()->glDeleteFramebuffers(1, fboPtr);
+        QOpenGLContext::globalShareContext()->functions()->glDeleteFramebuffers(1, fboPtr);
     });
     f.glGetIntegerv(GL_FRAMEBUFFER_BINDING, &oFbo);
     f.glBindFramebuffer(GL_FRAMEBUFFER, **fbo);

@@ -13,7 +13,8 @@ namespace volren {
 #define BASE VolRenRaycast
 
 VolRenRaycastGL::VolRenRaycastGL()
- : BASE(Method_Raycast_GL)
+  : BASE(Method_Raycast_GL)
+  , colormap(new ColormapGL(std::make_shared<Colormap>()))
 {
 
 }
@@ -95,7 +96,7 @@ void VolRenRaycastGL::newFBO(int w, int h, std::shared_ptr<GLuint> *fbo, std::sh
         QOpenGLContext::currentContext()->functions()->glGenTextures(1, texPtr);
         return texPtr;
     }(), [](GLuint* texPtr){
-        QOpenGLContext::currentContext()->functions()->glDeleteTextures(1, texPtr);
+        QOpenGLContext::globalShareContext()->functions()->glDeleteTextures(1, texPtr);
     });
     f.glBindTexture(GL_TEXTURE_2D, **tex);
     f.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -110,7 +111,7 @@ void VolRenRaycastGL::newFBO(int w, int h, std::shared_ptr<GLuint> *fbo, std::sh
         QOpenGLContext::currentContext()->functions()->glGenRenderbuffers(1, renPtr);
         return renPtr;
     }(), [](GLuint* renPtr){
-        QOpenGLContext::currentContext()->functions()->glDeleteRenderbuffers(1, renPtr);
+        QOpenGLContext::globalShareContext()->functions()->glDeleteRenderbuffers(1, renPtr);
     });
     f.glBindRenderbuffer(GL_RENDERBUFFER, **ren);
     f.glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32, w, h);
@@ -121,7 +122,7 @@ void VolRenRaycastGL::newFBO(int w, int h, std::shared_ptr<GLuint> *fbo, std::sh
         QOpenGLContext::currentContext()->functions()->glGenFramebuffers(1, fboPtr);
         return fboPtr;
     }(), [](GLuint* fboPtr){
-        QOpenGLContext::currentContext()->functions()->glDeleteFramebuffers(1, fboPtr);
+        QOpenGLContext::globalShareContext()->functions()->glDeleteFramebuffers(1, fboPtr);
     });
     f.glBindFramebuffer(GL_FRAMEBUFFER, **fbo);
     f.glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, **tex, 0);

@@ -99,9 +99,9 @@ class Colormap : public virtual IColormap
 public:
     Colormap() : _buffer(3), _stepsize(0.01f), _preintegrate(false), _filter(Filter_Linear)
     {
-    	_buffer[0] = Rgba(0.2f, 0.2f, 1.0f, 0.0f);
-    	_buffer[1] = Rgba(0.8f, 1.0f, 0.1f, 0.5f);
-    	_buffer[2] = Rgba(1.0f, 0.0f, 0.1f, 1.0f);
+        _buffer[0] = Rgba(0.2f, 0.2f, 1.0f, 0.1f);
+        _buffer[1] = Rgba(0.8f, 1.0f, 0.1f, 0.1f);
+        _buffer[2] = Rgba(1.0f, 0.0f, 0.1f, 0.1f);
     }
 	virtual const std::vector<Rgba>& buffer() const { return _buffer; }
     virtual float basesize() const { return _basesize; }
